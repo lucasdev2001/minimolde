@@ -1,6 +1,6 @@
 import { it, expect, describe } from "vitest";
 import supertest from "supertest";
-import { app } from "../src/app";
+import { app } from "../../src/app";
 
 describe("Root route", () => {
   it("Should respond to GET method", async () => {

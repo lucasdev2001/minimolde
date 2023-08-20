@@ -1,15 +1,21 @@
 import * as dotenv from "dotenv";
 import path from "node:path";
 import Aedes from "aedes";
-import { createServer } from "aedes-server-factory";
 import mq from "mqemitter";
-import mongoose from "mongoose";
+import employeeHandler from "./controllers/employeeHandler";
+import EmployeeModel from "./models/Employee";
 dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
-export const emitter = mq();
-const aedes = new Aedes({ mq: emitter });
+export const emitter = mq({
+  concurrency: 5,
+});
+export const aedes = new Aedes({
+  mq: emitter,
+  id: "Minimolde Broker",
+});
 
-mongoose.connect(process.env.MONGO_URI).then(() => console.log("Connected!"));
+emitter.on("employee/#", employeeHandler);
 
-export const broker = createServer(aedes);
-export const brokerOverWs = createServer(aedes, { ws: true });
+EmployeeModel.watch().on("change", (stream) => {
+  emitter.emit({ topic: "employee/updated", payload: JSON.stringify(stream) });
+});

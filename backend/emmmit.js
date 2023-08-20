@@ -1,9 +1,9 @@
 const mqtt = require("mqtt");
 const client = mqtt.connect("mqtt://127.0.0.1:1883");
 
-client.subscribe("presence", err => {
+client.subscribe("team/lucas", err => {
   if (!err) {
-    client.publish("presence", "Hello mqtt from server");
+    client.publish("team/lucas", "Hello mqtt from server");
   }
 });
 
