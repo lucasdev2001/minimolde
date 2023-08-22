@@ -1,17 +1,22 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 
-const employeeSchema = new Schema({
-  password: String,
-});
+const employeeSchema = new Schema(
+  {
+    name: String,
+    email: String,
+    password: String,
+  },
+  { strict: true }
+);
 
 employeeSchema.pre("save", function () {
   bcrypt
     .hash(this.password, 10)
-    .then(hash => {
+    .then((hash) => {
       this.password = hash;
     })
-    .catch(err => {
+    .catch((err) => {
       console.log(err);
     });
 });

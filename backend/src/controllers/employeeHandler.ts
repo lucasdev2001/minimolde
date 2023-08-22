@@ -4,26 +4,29 @@ import { Employee as EmployeeInterface } from "../types";
 
 export default (message: PublishPacket, done: () => void) => {
   const operationType = message.topic.split("/")[1];
-  console.log(operationType);
+  const employee = message.payload.toString();
 
-  if (operationType === "save")
-    saveEmployee({
-      password: "123",
-    });
+  if (operationType === "save") saveEmployee(employee);
+  if (operationType === "auth") authenticateEmployee();
+
+  if (operationType === "update") updateEmployee();
 
   if (operationType === "delete") deleteEmployee();
 
   done();
 };
 
-function saveEmployee(employee: EmployeeInterface) {
-  const EMPLOYEE = new Employee(employee);
-  EMPLOYEE
-    .save()
-    .then(employee => console.log(employee))
-    .catch(err => console.log(err));
+function saveEmployee(employee: string) {
+  try {
+    const nWemployee = JSON.parse(employee) as EmployeeInterface;
+    
+  } catch (error) {
+    console.log(error);
+  }
 }
 
-function deleteEmployee() {
-  console.log("delete");
-}
+function updateEmployee() {}
+
+function deleteEmployee() {}
+
+function authenticateEmployee() {}

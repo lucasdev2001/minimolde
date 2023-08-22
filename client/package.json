@@ -9,7 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "mqtt": "^5.0.2",
+    "mqtt": "^5.0.3",
+    "ts-pattern": "^5.0.5",
     "vite-plugin-node-polyfills": "^0.9.0",
     "vue": "^3.3.4",
     "vue-router": "^4.2.4"
