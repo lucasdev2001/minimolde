@@ -4,19 +4,23 @@ import bcrypt from "bcrypt";
 const employeeSchema = new Schema(
   {
     name: String,
-    email: String,
+    email: {
+      type: String,
+      unique: true,
+    },
     password: String,
   },
   { strict: true }
 );
 
-employeeSchema.pre("save", function () {
+employeeSchema.pre("save", function (next) {
   bcrypt
     .hash(this.password, 10)
-    .then((hash) => {
+    .then(hash => {
       this.password = hash;
+      next();
     })
-    .catch((err) => {
+    .catch(err => {
       console.log(err);
     });
 });
