@@ -130,4 +130,4 @@ dist
 .pnp.*
 
 #windows scripts
-.bat
+*.bat
