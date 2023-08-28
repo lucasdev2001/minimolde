@@ -1,27 +1,22 @@
 <script lang="ts" setup>
 import axios, { AxiosError } from "axios";
 import { ref } from "vue";
+import { useRouter } from "vue-router";
+import Toast from "../components/Toast.vue";
 
+const router = useRouter();
 const loginForm = ref({});
 const isNwUser = ref(false);
 const isLoading = ref(false);
-const errorMessage = ref<null | string>(null);
-// const successMessage = ref<null | string>(null);
+const errorMessage = ref<undefined | string>(undefined);
 const nwUserModal = ref<HTMLDialogElement>();
 
 const handleerrorMessage = (message: string) => {
   errorMessage.value = message;
   setTimeout(() => {
-    errorMessage.value = null;
+    errorMessage.value = undefined;
   }, 3000);
 };
-
-// const handleSuccessMessage = (message: string) => {
-//   successMessage.value = message;
-//   setTimeout(() => {
-//     successMessage.value = null;
-//   }, 3000);
-// };
 
 const handleSubmit = (event: Event) => {
   event.preventDefault();
@@ -40,9 +35,9 @@ const handleSubmit = (event: Event) => {
   axios
     .post(import.meta.env.VITE_API_ADDRES + path, employee)
     .then(res => {
-      // handleSuccessMessage(isNwUser.value ? "Succesfully created" : "Welcome");
       if (!isNwUser.value) {
         localStorage.setItem("token", res.data);
+        router.push({ name: "Home" });
       } else {
         (nwUserModal.value as HTMLDialogElement).showModal();
       }
@@ -51,6 +46,11 @@ const handleSubmit = (event: Event) => {
       handleerrorMessage((err.response?.data as string) ?? err.message);
     })
     .finally(() => (isLoading.value = false));
+};
+
+const handleNwUserModalClose = () => {
+  isNwUser.value = !isNwUser;
+  nwUserModal.value?.close();
 };
 </script>
 
@@ -140,32 +140,7 @@ const handleSubmit = (event: Event) => {
     </div>
   </main>
 
-  <div
-    class="toast toast-top toast-center max-h-60 lg:max-h-none"
-    v-if="errorMessage"
-  >
-    <label for="sign">
-      <div>
-        <div class="alert shadow-lg rounded-full text-xs lg:text-lg">
-          ⚠️{{ errorMessage }}
-        </div>
-        <br />
-      </div>
-    </label>
-  </div>
-  <!-- <div
-    class="toast toast-top toast-center max-h-60 lg:max-h-none"
-    v-if="successMessage"
-  >
-    <label for="sign">
-      <div>
-        <div class="alert shadow-lg rounded-full text-xs lg:text-lg">
-          ✅ {{ successMessage }}
-        </div>
-        <br />
-      </div>
-    </label>
-  </div> -->
+  <Toast :message="errorMessage" icon="⚠️" />
 
   <dialog class="modal" ref="nwUserModal">
     <form method="dialog" class="modal-box">
@@ -174,15 +149,7 @@ const handleSubmit = (event: Event) => {
         Your account has been created successfully! we hope you enjoy this beta!
       </p>
       <div class="modal-action">
-        <button
-          class="btn btn-primary"
-          @click="
-            () => {
-              isNwUser = !isNwUser;
-              nwUserModal?.close();
-            }
-          "
-        >
+        <button class="btn btn-primary" @click="handleNwUserModalClose">
           Log in
         </button>
       </div>

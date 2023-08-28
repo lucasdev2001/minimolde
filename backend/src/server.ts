@@ -1,10 +1,11 @@
 import { createServer } from "aedes-server-factory";
 import { app } from "./app";
 import { aedes } from "./broker";
+import mongoose from "mongoose";
+
 import * as dotenv from "dotenv";
 import path from "node:path";
-import mongoose from "mongoose";
-dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 const { HTTP_PORT, BROKER_PORT, BROKER_OVER_WS_PORT } = process.env;
 

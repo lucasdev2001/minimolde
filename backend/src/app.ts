@@ -1,12 +1,8 @@
-import express, {
-  Response,
-  Request,
-  NextFunction,
-  ErrorRequestHandler,
-} from "express";
+import express, { Response, Request, NextFunction } from "express";
 import cors from "cors";
 import employeeRoute from "./routes/employees";
-import AuthMiddleware from "./routes/middlewares/AuthMiddleware";
+import authMiddleware from "./routes/middlewares/authMiddleware";
+import filesRoute from "./routes/files";
 
 export const app = express();
 
@@ -17,11 +13,12 @@ app.get("/", (req, res) => {
   res.json("pong");
 });
 
-app.post("/token", AuthMiddleware, (req, res) => {
-  res.status(200).send(req.body);
+app.get("/validate-token", authMiddleware, (req, res) => {
+  res.status(200).json({ message: "authorized" });
 });
 
 app.use("/employees", employeeRoute);
+app.use("/files", filesRoute);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err);

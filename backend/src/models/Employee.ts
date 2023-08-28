@@ -9,7 +9,12 @@ const employeeSchema = new Schema(
       unique: true,
     },
     password: String,
+    roles: {
+      type: Array,
+      default: ["researcher"],
+    },
   },
+
   { strict: true }
 );
 
