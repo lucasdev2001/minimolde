@@ -1,6 +1,9 @@
 import { createApp } from "vue";
-import "./style.css";
 import { createRouter, createWebHashHistory } from "vue-router";
+import { GesturePlugin } from "@vueuse/gesture";
+
+import "./style.css";
+
 import AppVue from "./App.vue";
 import Login from "./routes/Login.vue";
 import Home from "./routes/Home.vue";
@@ -48,5 +51,6 @@ router.beforeEach(async to => {
 
 const app = createApp(AppVue);
 app.use(router);
+app.use(GesturePlugin);
 
 app.mount("#app");
