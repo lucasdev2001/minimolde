@@ -29,7 +29,7 @@ router.post("/:bucket", upload.single("file"), async (req, res) => {
   res.status(200).json({ message: "ok" });
 });
 
-router.get("/:bucket", async (req, res) => {
+/* router.get("/:bucket", async (req, res) => {
   const bucket = req.params.bucket;
 
   var data: object[] = [];
@@ -43,6 +43,6 @@ router.get("/:bucket", async (req, res) => {
   stream.on("error", function (err) {
     res.status(400).json({ message: err.message });
   });
-});
+}); */
 
 export default router;
