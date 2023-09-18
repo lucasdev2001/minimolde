@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 
 const employeeSchema = new Schema(
@@ -9,7 +9,10 @@ const employeeSchema = new Schema(
       type: String,
       required: true,
     },
-    roles: [],
+    roles: {
+      type: Array,
+      default: ["researcher"],
+    },
   },
   { strict: true }
 );
@@ -21,3 +24,7 @@ employeeSchema.pre("save", async function (next) {
     return next();
   }
 });
+
+const Employee = model("Employee", employeeSchema);
+
+export default Employee;
