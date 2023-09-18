@@ -8,6 +8,8 @@ app.onError(errorHandler);
 
 app.use("/", cors());
 
+app.get("/", c => c.text("pong 🏓"));
+
 app.route("/employee", employee);
 
 export default app;
