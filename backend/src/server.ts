@@ -1,10 +1,14 @@
+import * as dotenv from "dotenv";
+import path from "node:path";
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+
 import { serve } from "@hono/node-server";
 import app from "./app";
 
 serve(
   {
     fetch: app.fetch,
-    port: 3000,
+    port: Number(process.env.HTTP_PORT),
   },
   info => console.log(info)
 );

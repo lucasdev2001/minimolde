@@ -1,15 +1,13 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
+import employee from "./routes/employee";
+import errorHandler from "./middleware/errorHandler";
 
 const app = new Hono();
-app.onError((err, c) => {
-  console.error(`${err}`);
-  return c.text("Custom Error Message", 500);
-});
+app.onError(errorHandler);
 
-app.get("/search", c => {
-  const query = c.req.query("sort");
+app.use("/", cors());
 
-  return c.json({ hi: "there" });
-});
+app.route("/employee", employee);
 
 export default app;
