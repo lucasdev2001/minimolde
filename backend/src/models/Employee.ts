@@ -18,11 +18,9 @@ const employeeSchema = new Schema(
 );
 
 employeeSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    const hash = await bcrypt.hash(this.password, 10).then(hash => hash);
-    this.password = hash;
-    return next();
-  }
+  const hash = await bcrypt.hash(this.password, 10).then(hash => hash);
+  this.password = hash;
+  return next();
 });
 
 const Employee = model("Employee", employeeSchema);
