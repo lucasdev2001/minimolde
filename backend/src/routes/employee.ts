@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 
 const employee = new Hono();
 
-employee.post("/authenticate", async c => {
+employee.post("/auth", async c => {
   const body = await c.req.json();
   const employee = await Employee.findOne({
     email: body.email,
@@ -34,6 +34,7 @@ employee.post("/authenticate", async c => {
 });
 
 employee.post("/", async c => {
+  console.log('here');
   const body = await c.req.json();
   const employee = new Employee(body);
   await employee.save();
