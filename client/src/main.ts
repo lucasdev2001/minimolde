@@ -1,13 +1,14 @@
 import { createApp } from "vue";
 import { createRouter, createWebHashHistory } from "vue-router";
-import { GesturePlugin } from "@vueuse/gesture";
-
 import "./style.css";
 
 import AppVue from "./App.vue";
 import Login from "./routes/Login.vue";
 import Home from "./routes/Home.vue";
 import axios from "axios";
+import NavbarVue from "./components/Navbar.vue";
+import FilesVue from "./routes/Files.vue";
+import TasksVue from "./routes/Tasks.vue";
 
 const isAuthenticated = (token: string | null) => {
   const axiosConfig = {
@@ -25,16 +26,39 @@ export const router = createRouter({
   history: createWebHashHistory(),
 
   routes: [
-    { path: "/", component: Home, name: "Home" },
+    {
+      path: "/",
+      component: NavbarVue,
+
+      children: [
+        {
+          name: "Home",
+          component: Home,
+          path: "/",
+        },
+        {
+          name: "Files",
+          component: FilesVue,
+          path: "/files",
+        },
+        {
+          name: "Tasks",
+          component: TasksVue,
+          path: "/tasks",
+        },
+      ],
+    },
     {
       path: "/login",
       name: "Login",
       component: Login,
       beforeEnter: async to => {
-        const canAccess = await isAuthenticated(localStorage.getItem("token"));
-
-        if (canAccess && to.name === "Login") {
-          return { name: "Home" };
+        if (to.name === "Login") {
+          const token = localStorage.getItem("token");
+          const canAccess = await isAuthenticated(token);
+          if (canAccess) {
+            return { name: "Home" };
+          }
         }
       },
     },
@@ -42,15 +66,16 @@ export const router = createRouter({
 });
 
 router.beforeEach(async to => {
-  const canAccess = await isAuthenticated(localStorage.getItem("token"));
-
-  if (!canAccess && to.name !== "Login") {
-    return { name: "Login" };
+  if (to.name !== "Login") {
+    const token = localStorage.getItem("token");
+    const canAccess = await isAuthenticated(token);
+    if (!canAccess) {
+      return { name: "Login" };
+    }
   }
 });
 
 const app = createApp(AppVue);
 app.use(router);
-app.use(GesturePlugin);
 
 app.mount("#app");

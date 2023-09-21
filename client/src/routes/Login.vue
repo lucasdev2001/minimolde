@@ -30,7 +30,7 @@ const handleSubmit = (event: Event) => {
     throw (new Error().message = message);
   }
 
-  const path = isNwUser.value ? "/employees/" : "/employees/auth";
+  const path = isNwUser.value ? "/employees" : "/employees/auth";
   isLoading.value = true;
   axios
     .post(import.meta.env.VITE_API_ADDRES + path, employee)
