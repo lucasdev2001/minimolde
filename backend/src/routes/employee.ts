@@ -3,7 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import bcrypt from "bcrypt";
 
 import Employee from "../models/Employee";
-import jwt from "jsonwebtoken";
+import signToken from "../utils/signToken";
 
 const employee = new Hono();
 
@@ -17,24 +17,19 @@ employee.post("/auth", async c => {
     throw new HTTPException(401, { message: "wrong email or password" });
 
   const comparison = await bcrypt.compare(body.password, employee.password);
-
   const payload = {
     name: employee.name,
     email: employee.email,
   };
 
-  const token = jwt.sign(payload, process.env.JWT_SECRET!, {
-    expiresIn: "1h",
-  });
+  const token = signToken(payload, process.env.JWT_SECRET!, 10 * 60);
 
   if (!comparison)
     throw new HTTPException(401, { message: "wrong email or password" });
-
   if (comparison) return c.json(token, 200);
 });
 
 employee.post("/", async c => {
-  console.log('here');
   const body = await c.req.json();
   const employee = new Employee(body);
   await employee.save();
