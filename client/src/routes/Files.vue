@@ -81,14 +81,15 @@ const handleUploadFile = async (e: Event) => {
   <dialog class="modal modal-bottom lg:modal-middle" ref="modal">
     <div class="modal-box flex flex-col gap-3 prose">
       <form method="dialog">
+        <i class="fa-solid fa-box-archive text-lg"></i>
         <button
           class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
           @click="reset()"
         >
-          ✕
+          <i class="fa-solid fa-x"></i>
         </button>
       </form>
-      <form @submit="handleUploadFile" class="flex flex-col">
+      <form @submit="handleUploadFile" class="flex flex-col prose gap-3">
         <h3 class="font-bold text-lg">Are you sure ?</h3>
         <input
           type="text"
@@ -96,7 +97,7 @@ const handleUploadFile = async (e: Event) => {
           :value="file?.name"
           readonly
         />
-        <button class="btn btn-neutral mt-3">confirm</button>
+        <button class="btn btn-neutral">confirm</button>
       </form>
     </div>
   </dialog>

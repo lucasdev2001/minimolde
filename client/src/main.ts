@@ -18,7 +18,9 @@ const isAuthenticated = (token: string | null) => {
   };
   return axios
     .get(import.meta.env.VITE_API_ADDRES + "/validate-token", axiosConfig)
-    .then(() => true)
+    .then(res => {
+      return res.data;
+    })
     .catch(() => false);
 };
 
@@ -27,14 +29,14 @@ export const router = createRouter({
 
   routes: [
     {
-      path: "/",
+      path: "/home",
       component: NavbarVue,
 
       children: [
         {
           name: "Home",
           component: Home,
-          path: "/",
+          path: "/home",
         },
         {
           name: "Files",
@@ -49,18 +51,9 @@ export const router = createRouter({
       ],
     },
     {
-      path: "/login",
+      path: "/",
       name: "Login",
       component: Login,
-      beforeEnter: async to => {
-        if (to.name === "Login") {
-          const token = localStorage.getItem("token");
-          const canAccess = await isAuthenticated(token);
-          if (canAccess) {
-            return { name: "Home" };
-          }
-        }
-      },
     },
   ],
 });
@@ -69,6 +62,8 @@ router.beforeEach(async to => {
   if (to.name !== "Login") {
     const token = localStorage.getItem("token");
     const canAccess = await isAuthenticated(token);
+    //renew token
+    localStorage.setItem("token", canAccess);
     if (!canAccess) {
       return { name: "Login" };
     }

@@ -27,7 +27,7 @@ const logOut = () => {
     </div>
 
     <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1 flex gap-4">
+      <ul class="menu menu-horizontal px-1 flex gap-10">
         <li>
           <a
             @click="router.push({ name: 'Home' })"

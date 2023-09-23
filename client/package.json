@@ -22,8 +22,10 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",
+    "@playwright/test": "^1.38.1",
     "@tailwindcss/typography": "^0.5.9",
     "@types/jsonwebtoken": "^9.0.2",
+    "@types/node": "^20.6.3",
     "@vitejs/plugin-vue": "^4.2.3",
     "autoprefixer": "^10.4.14",
     "daisyui": "^3.5.1",

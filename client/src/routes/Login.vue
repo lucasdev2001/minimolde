@@ -68,11 +68,12 @@ const handleNwUserModalClose = () => {
         </video>
       </figure>
       <form
-        class="grid px-3 lg:w-1/2 lg:content-center gap-3"
+        class="flex flex-col px-3 lg:w-1/2 lg:content-center gap-3"
         @submit="handleSubmit"
         ref="loginForm"
       >
         <input
+          data-test-id=""
           v-if="isNwUser"
           type="text"
           placeholder="Name"
@@ -87,21 +88,24 @@ const handleNwUserModalClose = () => {
           class="input input-bordered input-neutral w-full"
           required
         />
-        <input
-          type="password"
-          placeholder="Password"
-          name="password"
-          class="input input-bordered input-neutral w-full"
-          required
-        />
-        <input
-          v-if="isNwUser"
-          type="password"
-          placeholder="Confirm Password"
-          name="confirmPassword"
-          class="input input-bordered input-neutral w-full"
-          required
-        />
+        <div class="flex gap-3">
+          <input
+            type="password"
+            placeholder="Password"
+            name="password"
+            class="input input-bordered input-neutral w-full"
+            required
+          />
+
+          <input
+            v-if="isNwUser"
+            type="password"
+            placeholder="Confirm Password"
+            name="confirmPassword"
+            class="input input-bordered input-neutral w-full"
+            required
+          />
+        </div>
 
         <input
           type="submit"
@@ -125,15 +129,6 @@ const handleNwUserModalClose = () => {
                 ? "don't have an account yet ?"
                 : "already have an account ?"
             }}
-          </button>
-        </div>
-        <div class="text-end text-sm" v-if="!isNwUser">
-          <button
-            class="link no-underline hover:underline"
-            :disabled="isLoading"
-            type="button"
-          >
-            forgot your password ?
           </button>
         </div>
       </form>
