@@ -4,5 +4,16 @@ export default {
   theme: {
     extend: {},
   },
+  daisyui: {
+    themes: [
+      "lemonade",
+      /* {
+        dark: {
+          ...require("daisyui/src/theming/themes")["[data-theme=dark]"],
+          primary: "#4b6bfb",
+        },
+      }, */
+    ],
+  },
   plugins: [require("@tailwindcss/typography"), require("daisyui")],
 };

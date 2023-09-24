@@ -3,12 +3,12 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import "./style.css";
 
 import AppVue from "./App.vue";
-import Login from "./routes/Login.vue";
-import Home from "./routes/Home.vue";
 import axios from "axios";
+
+//views
 import NavbarVue from "./components/Navbar.vue";
-import FilesVue from "./routes/Files.vue";
-import TasksVue from "./routes/Tasks.vue";
+import Authvue from "./views/Auth.vue";
+import FilesVue from "./views/Files.vue";
 
 const isAuthenticated = (token: string | null) => {
   const axiosConfig = {
@@ -24,48 +24,36 @@ const isAuthenticated = (token: string | null) => {
     .catch(() => false);
 };
 
-export const router = createRouter({
+const router = createRouter({
   history: createWebHashHistory(),
 
   routes: [
     {
       path: "/home",
+      name: "Home",
       component: NavbarVue,
-
       children: [
         {
-          name: "Home",
-          component: Home,
-          path: "/home",
-        },
-        {
+          path: "Files",
           name: "Files",
           component: FilesVue,
-          path: "/files",
-        },
-        {
-          name: "Tasks",
-          component: TasksVue,
-          path: "/tasks",
         },
       ],
     },
     {
       path: "/",
-      name: "Login",
-      component: Login,
+      name: "Auth",
+      component: Authvue,
     },
   ],
 });
 
 router.beforeEach(async to => {
-  if (to.name !== "Login") {
+  if (to.name !== "Auth") {
     const token = localStorage.getItem("token");
     const canAccess = await isAuthenticated(token);
-    //renew token
-    localStorage.setItem("token", canAccess);
     if (!canAccess) {
-      return { name: "Login" };
+      return { name: "Auth" };
     }
   }
 });

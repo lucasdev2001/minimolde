@@ -4,7 +4,7 @@ const router = useRouter();
 const route = useRoute();
 const logOut = () => {
   localStorage.removeItem("token");
-  router.push({ name: "Login" });
+  router.push({ name: "Auth" });
 };
 </script>
 <template>

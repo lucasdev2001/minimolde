@@ -16,6 +16,7 @@
     "aedes": "^0.50.0",
     "aedes-server-factory": "^0.2.1",
     "bcrypt": "^5.1.0",
+    "dayjs": "^1.11.10",
     "dotenv": "^16.3.1",
     "hono": "^3.7.1",
     "jsonwebtoken": "^9.0.1",

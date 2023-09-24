@@ -4,7 +4,10 @@ import bcrypt from "bcrypt";
 const employeeSchema = new Schema(
   {
     name: String,
-    email: String,
+    email: {
+      type: String,
+      unique: true,
+    },
     password: {
       type: String,
       required: true,

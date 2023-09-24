@@ -1,16 +1,22 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { jwt } from "hono/jwt";
 import employee from "./routes/employee";
 import errorHandler from "./middleware/errorHandler";
-import validateToken from "./middleware/validateToken";
 import file from "./routes/file";
 
 const app = new Hono();
+const secret = process.env.JWT_SECRET!;
+
 app.onError(errorHandler);
 
 app.use("/*", cors());
 
-app.get("/validate-token", validateToken);
+app.use("/validate-token", jwt({ secret }));
+app.get("/validate-token", c => {
+  const payload = c.get("jwtPayload");
+  return c.json(payload);
+});
 
 app.get("/", c => c.text("pong 🏓"));
 
