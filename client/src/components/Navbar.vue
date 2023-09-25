@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
+import NavDesktop from "./navbar/NavDesktop.vue";
+import Drawer from "./navbar/Drawer.vue";
 const router = useRouter();
 const route = useRoute();
 const logOut = () => {
@@ -8,7 +10,7 @@ const logOut = () => {
 };
 </script>
 <template>
-  <nav className="navbar bg-base-100 container mx-auto">
+  <nav className="navbar bg-base-100 ">
     <div className="navbar-start">
       <button class="btn btn-ghost btn-circle">
         <div class="indicator">
@@ -20,43 +22,16 @@ const logOut = () => {
 
     <div class="navbar-center lg:hidden">
       <ul class="menu menu-horizontal px-1 flex">
-        <li>
-          <a class="active">{{ route.name?.toString() }}</a>
-        </li>
+        <label for="drawer" class="drawer-button">
+          <li>
+            <a class="active">{{ route.name?.toString() }}</a>
+          </li>
+        </label>
       </ul>
     </div>
+    <!-- desktop -->
 
-    <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1 flex gap-10">
-        <li>
-          <a
-            @click="router.push({ name: 'Home' })"
-            :class="{ active: route.name === 'Home' }"
-          >
-            home
-            <i class="fa-solid fa-house"></i>
-          </a>
-        </li>
-        <li>
-          <a
-            @click="router.push({ name: 'Files' })"
-            :class="{ active: route.name === 'Files' }"
-          >
-            files
-            <i class="fa-solid fa-box-archive"></i>
-          </a>
-        </li>
-        <li>
-          <a
-            @click="router.push({ name: 'Tasks' })"
-            :class="{ active: route.name === 'Tasks' }"
-          >
-            tasks
-            <i class="fa-solid fa-check-to-slot"></i>
-          </a>
-        </li>
-      </ul>
-    </div>
+    <NavDesktop />
 
     <div className="navbar-end">
       <div className="dropdown dropdown-end">
@@ -88,49 +63,7 @@ const logOut = () => {
   </nav>
   <br />
 
-  <div class="drawer drawer-end z-50">
-    <input id="drawer" type="checkbox" class="drawer-toggle" />
-    <div class="drawer-content flex flex-col items-center justify-center"></div>
-    <div class="drawer-side">
-      <label for="drawer" class="drawer-overlay"></label>
-      <ul
-        class="menu p-4 0 min-h-full bg-base-200 text-base-content w-1/2 flex gap-4"
-      >
-        <label for="drawer" class="drawer-button">
-          <li>
-            <a
-              @click="router.push({ name: 'Home' })"
-              :class="{ active: route.name === 'Home' }"
-            >
-              <i class="fa-solid fa-house"></i>
-              home
-            </a>
-          </li>
-        </label>
-        <label for="drawer" class="drawer-button">
-          <li>
-            <a
-              @click="router.push({ name: 'Files' })"
-              :class="{ active: route.name === 'Files' }"
-            >
-              <i class="fa-solid fa-box-archive"></i>
-              files
-            </a>
-          </li>
-        </label>
-        <label for="drawer" class="drawer-button">
-          <li>
-            <a
-              @click="router.push({ name: 'Tasks' })"
-              :class="{ active: route.name === 'Tasks' }"
-            >
-              <i class="fa-solid fa-check-to-slot"></i>
-              tasks
-            </a>
-          </li>
-        </label>
-      </ul>
-    </div>
-  </div>
+  <Drawer />
+
   <RouterView />
 </template>

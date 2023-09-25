@@ -25,7 +25,9 @@ employee.post("/auth", async c => {
     email: employee.email,
   };
 
-  const token = await sign(payload, process.env.JWT_SECRET!, { expiresIn: 60 });
+  const token = await sign(payload, process.env.JWT_SECRET!, {
+    expiresIn: 60 * 60,
+  });
   return c.json(token, 200);
 });
 

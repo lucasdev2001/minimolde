@@ -9,6 +9,7 @@ import axios from "axios";
 import NavbarVue from "./components/Navbar.vue";
 import Authvue from "./views/Auth.vue";
 import FilesVue from "./views/Files.vue";
+import HomeVue from "./views/Home.vue";
 
 const isAuthenticated = (token: string | null) => {
   const axiosConfig = {
@@ -30,9 +31,13 @@ const router = createRouter({
   routes: [
     {
       path: "/home",
-      name: "Home",
       component: NavbarVue,
       children: [
+        {
+          path: "/home",
+          name: "Home",
+          component: HomeVue,
+        },
         {
           path: "Files",
           name: "Files",
