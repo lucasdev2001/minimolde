@@ -11,6 +11,7 @@ const route = useRoute();
         <a
           @click="router.push({ name: 'Home' })"
           :class="{ active: route.name === 'Home' }"
+          class="focus"
         >
           home
           <i class="fa-solid fa-house"></i>
@@ -20,6 +21,7 @@ const route = useRoute();
         <a
           @click="router.push({ name: 'Files' })"
           :class="{ active: route.name === 'Files' }"
+          class="focus"
         >
           files
           <i class="fa-solid fa-box-archive"></i>
@@ -29,6 +31,7 @@ const route = useRoute();
         <a
           @click="router.push({ name: 'Tasks' })"
           :class="{ active: route.name === 'Tasks' }"
+          class="focus"
         >
           tasks
           <i class="fa-solid fa-check-to-slot"></i>

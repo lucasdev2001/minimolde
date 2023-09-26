@@ -9,7 +9,7 @@ const modal = ref<HTMLDialogElement | null>(null);
 
 const file = ref<File | null>();
 
-onChange(files => {
+onChange((files) => {
   file.value = files?.item(0);
   modal.value?.showModal();
 });
@@ -23,7 +23,7 @@ const handleUploadFile = async (e: Event) => {
 
   const res = await axios
     .post(import.meta.env.VITE_API_ADDRES + "/files", form)
-    .catch(err => err);
+    .catch((err) => err);
   console.log(res);
 };
 </script>
