@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 const fileSchema = new Schema(
   {
     originalName: String,
-    name: String,
+    fileName: String,
   },
   { strict: true }
 );
