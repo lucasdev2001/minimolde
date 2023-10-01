@@ -4,7 +4,13 @@ const fileSchema = new Schema(
     originalName: String,
     fileName: String,
   },
-  { strict: true }
+  {
+    strict: true,
+    timestamps: {
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+    },
+  }
 );
 
 const File = model("File", fileSchema);
