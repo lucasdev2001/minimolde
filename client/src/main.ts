@@ -35,12 +35,15 @@ const router = createRouter({
       children: [
         {
           path: "/home",
-          name: "Home",
+          name: "home",
           component: HomeVue,
+          meta: {
+            icon: "teste",
+          },
         },
         {
-          path: "Files",
-          name: "Files",
+          path: "files",
+          name: "files",
           component: FilesVue,
         },
       ],

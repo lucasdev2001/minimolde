@@ -41,18 +41,23 @@ const handleUploadFile = async (e: Event) => {
 
 <template>
   <main class="p-3">
-    <div class="tooltip" data-tip="add file">
-      <button class="btn btn-circle mb-3" @click="open({ multiple: false })">
-        <i class="fa-solid fa-plus"></i>
-      </button>
-    </div>
-
+    <hgroup class="prose">
+      <h2>Files</h2>
+    </hgroup>
+    <div class="divider"></div>
     <div class="overflow-x-auto">
-      <table class="table table-xs">
+      <table class="table table-xs z-1">
         <!-- head -->
         <thead>
           <tr class="text-justify">
-            <th>Name</th>
+            <th>
+              Name
+              <label class="swap">
+                <input type="checkbox" />
+                <i class="fa-solid fa-arrow-down swap-on"></i>
+                <i class="fa-solid fa-arrow-up swap-off"></i>
+              </label>
+            </th>
             <th>Created At</th>
             <th>Download</th>
           </tr>
@@ -97,23 +102,4 @@ const handleUploadFile = async (e: Event) => {
       </form>
     </div>
   </dialog>
-
-  <div class="btm-nav md:hidden text-xs">
-    <button>
-      <i class="fa-solid fa-house"></i>
-      <span class="btm-nav-label">Home</span>
-    </button>
-    <button class="active">
-      <i class="fa-solid fa-box-archive"></i>
-      <span class="btm-nav-label">Files</span>
-    </button>
-    <button>
-      <i class="fa-solid fa-list"></i>
-      <span class="btm-nav-label">Tasks</span>
-    </button>
-    <button>
-      <i class="fa-solid fa-people-group"></i>
-      <span class="btm-nav-label">Teams</span>
-    </button>
-  </div>
 </template>

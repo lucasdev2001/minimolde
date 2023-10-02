@@ -65,7 +65,7 @@ const handleSignIn = (event: Event) => {
     .post(import.meta.env.VITE_API_ADDRES + "/employees/auth", formJson)
     .then(response => {
       localStorage.setItem("token", response.data);
-      router.push({ name: "Home" });
+      router.push({ name: "home" });
     })
     .catch((error: AxiosError) => {
       handleErrorMessage((error.response?.data as string) ?? error.message);

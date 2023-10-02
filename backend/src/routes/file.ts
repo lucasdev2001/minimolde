@@ -44,7 +44,7 @@ file.post("/", async c => {
 });
 
 file.get("/", async c => {
-  const files = await File.find({});
+  const files = await File.find({}).sort({ originalName: "descending" });
   return c.json(files);
 });
 

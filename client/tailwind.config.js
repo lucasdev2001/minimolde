@@ -6,7 +6,7 @@ export default {
   },
   daisyui: {
     themes: [
-      "lemonade",
+      "lemonade"
       /* {
         dark: {
           ...require("daisyui/src/theming/themes")["[data-theme=dark]"],
