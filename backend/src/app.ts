@@ -21,6 +21,8 @@ app.get("/validate-token", c => {
 app.get("/", c => c.text("pong 🏓"));
 
 app.route("/employees", employee);
+
+// app.use("/files", jwt({ secret }));
 app.route("/files", file);
 
 export default app;

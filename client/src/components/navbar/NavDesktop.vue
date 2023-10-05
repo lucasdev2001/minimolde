@@ -13,7 +13,7 @@ const route = useRoute();
           :class="{ active: route.name === 'Home' }"
           class="focus"
         >
-          home
+          Home
           <i class="fa-solid fa-house"></i>
         </a>
       </li>
@@ -23,7 +23,7 @@ const route = useRoute();
           :class="{ active: route.name === 'Files' }"
           class="focus"
         >
-          files
+          Files
           <i class="fa-solid fa-box-archive"></i>
         </a>
       </li>
@@ -33,8 +33,18 @@ const route = useRoute();
           :class="{ active: route.name === 'Tasks' }"
           class="focus"
         >
-          tasks
+          Tasks
           <i class="fa-solid fa-check-to-slot"></i>
+        </a>
+      </li>
+      <li>
+        <a
+          @click="router.push({ name: 'Tasks' })"
+          :class="{ active: route.name === 'Tasks' }"
+          class="focus"
+        >
+          Teams
+          <i class="fa-solid fa-people-group"></i>
         </a>
       </li>
     </ul>

@@ -10,7 +10,7 @@ const logOut = () => {
 };
 </script>
 <template>
-  <nav className="navbar bg-base-100 ">
+  <nav className="navbar bg-base-100 shadow-md rounded-xl">
     <div className="navbar-start">
       <button class="btn btn-ghost btn-circle">
         <div class="indicator">
@@ -61,7 +61,6 @@ const logOut = () => {
       </div>
     </div>
   </nav>
-  <br />
 
   <Drawer />
 

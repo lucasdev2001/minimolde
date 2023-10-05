@@ -7,31 +7,67 @@ import path from "path";
 
 const file = new Hono();
 
+const { MINIO_DEFAULT_BUCKET } = process.env;
+
 file.post("/", async c => {
   const body = await c.req.parseBody();
+  console.log(body);
+
   const file = body.file as File;
   const customName = body.customName;
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const fileName = new Types.ObjectId() + path.extname(file.name);
 
-  const cb = async (err: Error) => {
-    if (err) throw new HTTPException(400, { message: err.message });
-    const newFile = new File({
+  const putObjectPromise = new Promise(async (resolve, reject) => {
+    minioClient.putObject(
+      MINIO_DEFAULT_BUCKET!,
       fileName,
-      originalName: customName !== "" ? customName : file.name,
-    });
-    await newFile.save();
-  };
+      buffer,
+      async err => {
+        if (err) reject(err);
+        resolve(true);
+      }
+    );
+  });
 
-  minioClient.putObject(
-    process.env.MINIO_DEFAULT_BUCKET!,
+  await putObjectPromise;
+
+  const newFile = new File({
     fileName,
-    buffer,
-    cb
+    originalName: customName ?? file.name,
+  });
+
+  await newFile.save();
+
+  return c.json(body, 201);
+});
+
+file.get("/", async c => {
+  const files = await File.find({});
+  return c.json(files);
+});
+
+file.get("/:fileName", async c => {
+  const fileName = c.req.param("fileName");
+
+  const presignedUrlpromise: Promise<string> = new Promise(
+    (resolve, reject) => {
+      minioClient.presignedUrl(
+        "GET",
+        MINIO_DEFAULT_BUCKET!,
+        fileName,
+        (err, presignedUrl) => {
+          if (err) return reject(err);
+          resolve(presignedUrl);
+        }
+      );
+    }
   );
 
-  return await c.json(body);
+  const url = await presignedUrlpromise;
+
+  return c.redirect(url);
 });
 
 export default file;
