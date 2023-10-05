@@ -88,7 +88,7 @@ const handleSignIn = (event: Event) => {
       ></video>
     </aside>
     <article
-      class="flex flex-col h-full justify-evenly lg:basis-1/2 place-items-center p-3"
+      class="flex flex-col h-full justify-evenly lg:basis-1/3 place-items-center p-3"
     >
       <figure>
         <img src="../assets/logo.svg" class="w-32" />
