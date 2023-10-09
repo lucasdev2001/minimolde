@@ -3,6 +3,8 @@ const fileSchema = new Schema(
   {
     originalName: String,
     fileName: String,
+    employee: String,
+    task: String,
   },
   {
     strict: true,

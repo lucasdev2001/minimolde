@@ -45,7 +45,12 @@ const handleUploadFile = async (e: Event) => {
       <h2>Files</h2>
     </hgroup>
     <div class="divider"></div>
-    <div>
+    <div class="tooltip" data-tip="add file">
+      <button class="btn btn-circle mb-3" @click="open({ multiple: false })">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
+    <div class="overflow-x-auto">
       <table class="table table-xs z-1">
         <!-- head -->
         <thead>
@@ -68,19 +73,9 @@ const handleUploadFile = async (e: Event) => {
             <td>{{ file.originalName }}</td>
             <td>{{ new Date(file.created_at).toLocaleString() }}</td>
             <td>
-              <div class="dropdown dropdown-right">
-                <label tabindex="0">Click</label>
-                <ul
-                  tabindex="0"
-                  class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-                >
-                  <div class="text-center">
-                    <p class="prose">Are you sure ?</p>
-                  </div>
-                  <li><a>confirm</a></li>
-                  <li><a>cancel</a></li>
-                </ul>
-              </div>
+              <a :href="apiAdress + '/files/' + file.fileName" download>
+                <i class="fa-solid fa-download"></i>
+              </a>
             </td>
           </tr>
         </tbody>

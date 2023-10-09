@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import mongoose, { Schema, model, mongo } from "mongoose";
 import bcrypt from "bcrypt";
 
 const employeeSchema = new Schema(
@@ -16,13 +16,22 @@ const employeeSchema = new Schema(
       type: Array,
       default: ["researcher"],
     },
+    teams: {
+      type: [],
+      ref: "Team",
+    },
+    tasks: [mongoose.Types.ObjectId],
+    profilePicture: String,
   },
   { strict: true }
 );
 
 employeeSchema.pre("save", async function (next) {
-  const hash = await bcrypt.hash(this.password, 10).then(hash => hash);
-  this.password = hash;
+  if (this.isNew) {
+    const hash = await bcrypt.hash(this.password, 10).then(hash => hash);
+    this.password = hash;
+    this.profilePicture = `https://api.dicebear.com/7.x/thumbs/svg?seed=${this.name}&radius=50`;
+  }
   return next();
 });
 

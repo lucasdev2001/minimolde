@@ -10,6 +10,7 @@ import NavbarVue from "./components/Navbar.vue";
 import Authvue from "./views/Auth.vue";
 import FilesVue from "./views/Files.vue";
 import HomeVue from "./views/Home.vue";
+import TeamsVue from "./views/Teams.vue";
 
 const isAuthenticated = (token: string | null) => {
   const axiosConfig = {
@@ -37,14 +38,16 @@ const router = createRouter({
           path: "/home",
           name: "home",
           component: HomeVue,
-          meta: {
-            icon: "teste",
-          },
         },
         {
           path: "files",
           name: "files",
           component: FilesVue,
+        },
+        {
+          path: "teams/:team",
+          name: "teams",
+          component: TeamsVue,
         },
       ],
     },

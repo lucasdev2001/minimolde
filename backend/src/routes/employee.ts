@@ -7,6 +7,28 @@ import Employee from "../models/Employee";
 
 const employee = new Hono();
 
+employee.get("/", async c => {
+  const employees = await Employee.find({}).select({
+    name: true,
+    email: true,
+    roles: true,
+    teams: true,
+  });
+
+  return c.json(employees);
+});
+
+employee.get("/:id", async c => {
+  const id = c.req.param("id");
+  try {
+    const employees = await Employee.findById(id).populate("teams");
+    return c.json(employees);
+  } catch (error) {
+    console.log((error as Error).message);
+    throw new HTTPException(404, { message: "Employee not found" });
+  }
+});
+
 employee.post("/auth", async c => {
   const body = await c.req.json();
   const employee = await Employee.findOne({
@@ -21,6 +43,7 @@ employee.post("/auth", async c => {
     throw new HTTPException(401, { message: "wrong email or password" });
 
   const payload = {
+    _id: employee._id,
     name: employee.name,
     email: employee.email,
   };
