@@ -45,7 +45,7 @@ const handleSignUp = (event: Event) => {
   const formJson = Object.fromEntries(formData.entries());
 
   axios
-    .post(import.meta.env.VITE_API_ADDRES + "/employees", formJson)
+    .post("http://localhost:3000/auth/create-account", formJson)
     .then(response => {
       console.log(response);
       toggleNwEmployeeDialog();
@@ -62,7 +62,7 @@ const handleSignIn = (event: Event) => {
   const formJson = Object.fromEntries(formData.entries());
 
   axios
-    .post(import.meta.env.VITE_API_ADDRES + "/employees/auth", formJson)
+    .post("http://localhost:3000/auth", formJson)
     .then(response => {
       localStorage.setItem("token", response.data);
       router.push({ name: "home" });
@@ -118,8 +118,8 @@ const handleSignIn = (event: Event) => {
     <form method="dialog" class="modal-box">
       <h3 class="font-bold text-lg">Welcome 🥳🥳🥳</h3>
       <p class="py-4">
-        Your account has been created successfully! we hope you may enjoy this
-        beta!
+        Your account has been created successfully! check your e-mail to verify
+        your account
       </p>
       <div class="modal-action">
         <button

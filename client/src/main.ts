@@ -6,11 +6,12 @@ import AppVue from "./App.vue";
 import axios from "axios";
 
 //views
-import NavbarVue from "./components/Navbar.vue";
+import NavbarVue from "./components/navbar/Navbar.vue";
 import Authvue from "./views/Auth.vue";
 import FilesVue from "./views/Files.vue";
 import HomeVue from "./views/Home.vue";
 import TeamsVue from "./views/Teams.vue";
+import VerifyEmailVue from "./views/VerifyEmail.vue";
 
 const isAuthenticated = (token: string | null) => {
   const axiosConfig = {
@@ -49,18 +50,49 @@ const router = createRouter({
           name: "teams",
           component: TeamsVue,
         },
+        {
+          path: "manage",
+          name: "manage",
+          children: [
+            {
+              path: "manage-teams",
+              name: "manage-teams",
+              component: HomeVue,
+            },
+            {
+              path: "manage-employees",
+              name: "manage-employees",
+              component: HomeVue,
+            },
+            {
+              path: "manage-tasks",
+              name: "manage-tasks",
+              component: HomeVue,
+            },
+          ],
+        },
       ],
     },
     {
       path: "/",
-      name: "Auth",
-      component: Authvue,
+      children: [
+        {
+          path: "/",
+          name: "Auth",
+          component: Authvue,
+        },
+        {
+          path: "verify-email/:token",
+          name: "verify-email",
+          component: VerifyEmailVue,
+        },
+      ],
     },
   ],
 });
 
 router.beforeEach(async to => {
-  if (to.name !== "Auth") {
+  if (to.name !== "Auth" && to.name !== "verify-email") {
     const token = localStorage.getItem("token");
     const canAccess = await isAuthenticated(token);
     if (!canAccess) {

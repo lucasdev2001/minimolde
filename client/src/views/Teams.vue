@@ -18,6 +18,7 @@ onBeforeMount(async () => {
     import.meta.env.VITE_API_ADDRES_FIND_ONE_TEAM + startCase(teamName)
   );
   team.value = response.data as Team;
+  console.log(team.value.employees);
 });
 </script>
 
@@ -48,56 +49,5 @@ onBeforeMount(async () => {
     </div>
 
     <div class="divider"></div>
-    <div class="flex justify-between gap-3">
-      <Transition name="fade">
-        <div class="basis-1/3 grow">
-          <button class="btn btn-success mb-3">Just Started</button>
-          <Task />
-        </div>
-      </Transition>
-      <Transition name="fade">
-        <div class="basis-1/3 grow">
-          <button class="btn btn-warning mb-3">In Progress</button>
-          <Task />
-        </div>
-      </Transition>
-      <Transition name="fade">
-        <div class="basis-1/3 grow">
-          <button class="btn btn-neutral mb-3">Completed</button>
-          <Task />
-        </div>
-      </Transition>
-    </div>
   </main>
 </template>
-
-<style scoped>
-@keyframes slideRight {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideLeft {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-.fade-enter-active {
-  animation: slideRight 0.3s ease-in-out forwards;
-}
-.fade-leave-active {
-  transition: opacity ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  animation: slideLeft 0.2s ease-in-out forwards;
-}
-</style>

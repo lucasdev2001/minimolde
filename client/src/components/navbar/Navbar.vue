@@ -3,7 +3,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ref, onBeforeMount } from "vue";
 import kebabCase from "lodash/kebabCase";
 
-import { Employee } from "../types";
+import { Employee } from "../../types";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 
@@ -30,7 +30,7 @@ onBeforeMount(async () => {
 const router = useRouter();
 const route = useRoute();
 
-const logOut = () => {
+const logout = () => {
   localStorage.removeItem("token");
   router.push({ name: "Auth" });
 };
@@ -43,7 +43,7 @@ const currentTime = ref<Date>(new Date());
     <div class="drawer-content">
       <div class="navbar bg-base- rounded-md">
         <div class="navbar-start">
-          <div class="text-sm breadcrumbs">
+          <div class="text-sm breadcrumbs hidden">
             <ul>
               <template v-for="routePath in route.path.split('/')">
                 <li>
@@ -78,11 +78,11 @@ const currentTime = ref<Date>(new Date());
       <ul
         class="menu min-h-full bg-base-100 text-base-content flex flex-col gap-7 p-3"
       >
-        <div class="dropdown dropdown-hover">
+        <div class="dropdown">
           <label tabindex="0" class="">
             <div class="flex place-items-center">
               <div class="avatar m-3">
-                <div class="w-24 rounded-full">
+                <div class="w-24 rounded-full cursor-pointer hover:border-2">
                   <img :src="employee.profilePicture" />
                 </div>
               </div>
@@ -100,7 +100,7 @@ const currentTime = ref<Date>(new Date());
             class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
           >
             <li><a>Profile</a></li>
-            <li><a>Item 2</a></li>
+            <li><a @click="logout">Logout</a></li>
           </ul>
         </div>
 

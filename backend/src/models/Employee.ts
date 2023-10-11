@@ -22,6 +22,10 @@ const employeeSchema = new Schema(
     },
     tasks: [mongoose.Types.ObjectId],
     profilePicture: String,
+    verified: {
+      type: Boolean,
+      default: false,
+    },
   },
   { strict: true }
 );

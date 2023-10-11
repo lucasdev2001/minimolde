@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { computed, onBeforeMount, ref } from "vue";
-import TaskVue from "../components/teams/Task.vue";
+import { computed, onBeforeMount, reactive, ref } from "vue";
 import jwt_decode from "jwt-decode";
 import { Employee, Task } from "../types";
 import axios from "axios";
 import Toast from "../components/Toast.vue";
+import TaskVue from "../components/teams/Task.vue";
 
 const codedToken = localStorage.getItem("token");
 const employee = ref<Employee>({
@@ -16,14 +16,11 @@ const employee = ref<Employee>({
   profilePicture: "",
 });
 const tasks = ref<Task[]>([]);
+const assignedToRadioInput = ref("");
+const checkedEmployees = ref([]);
+const checks = ref(true);
 const startedTasks = computed(() =>
   tasks.value.filter(task => task.status === "started")
-);
-const inProgressTasks = computed(() =>
-  tasks.value.filter(task => task.status === "progress")
-);
-const completedTasks = computed(() =>
-  tasks.value.filter(task => task.status === "completed")
 );
 
 const apiResponseMessage = ref<{ message: string; success: boolean } | null>();
@@ -71,7 +68,10 @@ const handleCreateTask = async (event: Event) => {
   const form = event.target as HTMLFormElement;
   const formData = new FormData(form);
   const formJson = Object.fromEntries(formData.entries());
-  try {
+  console.log(formJson);
+  console.log(checkedEmployees.value);
+
+  /*  try {
     const response = await axios.post(
       import.meta.env.VITE_API_ADDRES_TASKS,
       formJson
@@ -83,12 +83,43 @@ const handleCreateTask = async (event: Event) => {
   } catch (error) {
     handleApiResponseMessage((error as Error).message, false);
   }
-  createTaskModalToggle();
+  createTaskModalToggle(); */
 };
 
-const log = e => {
-  console.log(e);
-};
+const people = reactive([
+  {
+    _id: "1",
+    email: "employee1@example.com",
+    name: "John Doe",
+    roles: ["Developer"],
+    teams: ["Team A"],
+    profilePicture: "john-doe.jpg",
+  },
+  {
+    _id: "2",
+    email: "employee2@example.com",
+    name: "Jane Smith",
+    roles: ["Designer"],
+    teams: ["Team B"],
+    profilePicture: "jane-smith.jpg",
+  },
+  {
+    _id: "3",
+    email: "employee3@example.com",
+    name: "Alice Johnson",
+    roles: ["Manager"],
+    teams: ["Team C"],
+    profilePicture: "alice-johnson.jpg",
+  },
+]);
+
+const searchInput = ref("");
+
+const filteredPeople = computed(() => {
+  return people.filter(person =>
+    person.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
+  );
+});
 </script>
 
 <template>
@@ -111,7 +142,7 @@ const log = e => {
     <br /><br />
     <div class="flex justify-between gap-3">
       <Transition name="fade">
-        <div class="basis-1/3 grow" v-if="startedTasks.length > 0">
+        <div class="basis-1/3 grow">
           <button class="btn btn-success mb-3">Just Started</button>
           <div class="flex flex-col gap-3">
             <template v-for="startedTask in (startedTasks as Task[])">
@@ -124,20 +155,17 @@ const log = e => {
         </div>
       </Transition>
       <Transition name="fade">
-        <div class="basis-1/3 grow" v-if="inProgressTasks.length > 0">
+        <div class="basis-1/3 grow">
           <button class="btn btn-warning mb-3">In Progress</button>
           <div class="flex flex-col gap-3">
-            <template v-for="inProgressTask in (inProgressTasks as Task[])">
-              <TaskVue
-                :title="inProgressTask.title"
-                :description="inProgressTask.description"
-              />
+            <template v-for="inProgressTask in [0, 1, 2, 3]">
+              <TaskVue />
             </template>
           </div>
         </div>
       </Transition>
       <Transition name="fade">
-        <div class="basis-1/3 grow" v-if="completedTasks.length > 0">
+        <div class="basis-1/3 grow">
           <button class="btn btn-neutral mb-3">Completed</button>
           <div class="flex flex-col gap-3">
             <template v-for="completedTask in (completedTasks as Task[])">
@@ -163,28 +191,6 @@ const log = e => {
       </form>
       <div class="flex justify-between">
         <h3 class="font-bold text-lg">Create a new task</h3>
-        <div class="avatar-group -space-x-6">
-          <div class="avatar">
-            <div class="w-12">
-              <img :src="employee.profilePicture" />
-            </div>
-          </div>
-          <div class="avatar">
-            <div class="w-12">
-              <img :src="employee.profilePicture" />
-            </div>
-          </div>
-          <div class="avatar">
-            <div class="w-12">
-              <img :src="employee.profilePicture" />
-            </div>
-          </div>
-          <div class="avatar placeholder">
-            <div class="w-12 bg-neutral-focus text-neutral-content">
-              <span>+99</span>
-            </div>
-          </div>
-        </div>
       </div>
       <form class="form-control gap-3" @submit="handleCreateTask">
         <label for="title" class="label"></label>
@@ -209,41 +215,173 @@ const log = e => {
               name="assignedTo"
               class="radio radio-primary"
               :value="employee._id"
-              checked
+              v-model="assignedToRadioInput"
+              @change="() => console.log(assignedToRadioInput)"
             />
           </label>
         </div>
         <div class="form-control">
-          <label
-            class="label cursor-pointer"
-            v-if="employee.roles.includes('manager')"
-          >
+          <label class="label cursor-pointer">
             <span class="label-text">Team</span>
             <input
               type="radio"
-              name="assignTo"
+              name="assignedTo"
               class="radio radio-primary"
-              disabled
+              value="team"
+              v-model="assignedToRadioInput"
+              @change="() => console.log(assignedToRadioInput)"
             />
           </label>
         </div>
         <div class="form-control">
-          <label
-            class="label cursor-pointer disabled"
-            v-if="employee.roles.includes('manager')"
-          >
-            <span class="label-text">People</span>
+          <label class="label cursor-pointer disabled">
+            <span class="label-text">Employees</span>
             <input
               type="radio"
-              name="assignTo"
+              name="assignedTo"
               class="radio radio-primary"
-              disabled
+              value="employees"
+              v-model="assignedToRadioInput"
+              @change="() => console.log(assignedToRadioInput)"
             />
           </label>
         </div>
+        <div class="avatar-group -space-x-6">
+          <div class="avatar">
+            <div class="w-12">
+              <img :src="employee.profilePicture" />
+            </div>
+          </div>
+          <div class="avatar">
+            <div class="w-12">
+              <img :src="employee.profilePicture" />
+            </div>
+          </div>
+          <div class="avatar">
+            <div class="w-12">
+              <img :src="employee.profilePicture" />
+            </div>
+          </div>
+        </div>
+        <input
+          type="text"
+          placeholder="search employee"
+          class="input input-bordered input-primary w-full max-w-xs"
+          v-model="searchInput"
+        />
+
+        <div class="form-control" v-if="assignedToRadioInput === 'employees'">
+          <div class="overflow-x-auto">
+            <table class="table">
+              <!-- head -->
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Job</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="person in people" v-if="!searchInput">
+                  <tr>
+                    <th>
+                      <label>
+                        <input
+                          type="checkbox"
+                          class="checkbox"
+                          name="employee"
+                          :value="
+                            JSON.stringify({
+                              _id: person._id,
+                              email: person.email,
+                            })
+                          "
+                          v-model="checkedEmployees"
+                        />
+                      </label>
+                    </th>
+                    <td>
+                      <div class="flex items-center space-x-3">
+                        <div class="avatar">
+                          <div class="mask mask-squircle w-12 h-12">
+                            <img
+                              :src="employee.profilePicture"
+                              alt="Avatar Tailwind CSS Component"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <div class="font-bold">{{ person.name }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge badge-ghost badge-sm">
+                        {{ person.roles.map(role => role) }}</span
+                      >
+                    </td>
+                    <th>
+                      <button class="btn btn-ghost btn-xs">details</button>
+                    </th>
+                  </tr>
+                </template>
+                <template
+                  v-for="person in filteredPeople"
+                  v-if="searchInput.length > 0"
+                >
+                  <tr>
+                    <th>
+                      <label>
+                        <input
+                          type="checkbox"
+                          class="checkbox"
+                          name="employee"
+                          :value="
+                            JSON.stringify({
+                              _id: person._id,
+                              email: person.email,
+                            })
+                          "
+                          v-model="checkedEmployees"
+                        />
+                      </label>
+                    </th>
+                    <td>
+                      <div class="flex items-center space-x-3">
+                        <div class="avatar">
+                          <div class="mask mask-squircle w-12 h-12">
+                            <img
+                              :src="employee.profilePicture"
+                              alt="Avatar Tailwind CSS Component"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <div class="font-bold">{{ person.name }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge badge-ghost badge-sm">
+                        {{ person.roles.map(role => role) }}</span
+                      >
+                    </td>
+                    <th>
+                      <button class="btn btn-ghost btn-xs">details</button>
+                    </th>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <div class="modal-action">
-          <button class="btn btn-neutral" @click="createTaskModalToggle">
+          <button
+            class="btn btn-neutral"
+            @click="createTaskModalToggle"
+            type="button"
+          >
             Cancel
           </button>
           <button class="btn btn-primary" type="submit">Create</button>
@@ -258,33 +396,3 @@ const log = e => {
     :icon="apiResponseMessage.success ? '✅' : '❌'"
   />
 </template>
-
-<style scoped>
-@keyframes slideRight {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideLeft {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-.fade-enter-active {
-  animation: slideRight 0.3s ease-in-out forwards;
-}
-.fade-leave-active {
-  transition: opacity ease;
-}
-
-.fade-leave-to {
-  animation: slideLeft 0.2s ease-in-out forwards;
-}
-</style>
