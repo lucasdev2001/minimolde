@@ -32,19 +32,18 @@ employee.get("/populate", async c => {
 
 employee.get("/paginate", async c => {
   const { limit, page } = c.req.query();
-
-  if (limit && page) {
-    const employees = await Employee.find({})
-      .skip(Number(page) * Number(limit))
-      .limit(Number(limit));
-    return c.json({
-      pages: Math.ceil((await Employee.countDocuments()) / Number(limit)), //starts at zero
-      employees,
-    });
+  if (!limit && page) {
+    const employees = await Employee.find({});
+    return c.json(employees);
   }
-
-  const employees = await Employee.find({});
-  return c.json(employees);
+  const employees = await Employee.find({})
+    .skip(Number(page) * Number(limit))
+    .limit(Number(limit));
+  const pages = Math.ceil((await Employee.countDocuments()) / Number(limit)); //starts at zero
+  return c.json({
+    employees,
+    pages,
+  });
 });
 
 employee.get("/:id", async c => {

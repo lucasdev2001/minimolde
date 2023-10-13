@@ -6,6 +6,7 @@ import kebabCase from "lodash/kebabCase";
 import { Employee } from "../../types";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
+import BottomNavbar from "./BottomNavbar.vue";
 
 const codedToken = localStorage.getItem("token");
 const employee = ref<Employee>({
@@ -38,12 +39,19 @@ const logout = () => {
 const currentTime = ref<Date>(new Date());
 </script>
 <template>
-  <div class="drawer lg:drawer-open">
+  <div class="drawer sm:drawer-open">
     <input id="dashboard-drawer" type="checkbox" class="drawer-toggle" />
     <div class="drawer-content">
       <div class="navbar bg-base- rounded-md">
+        <div class="navbar-start sm:hidden">
+          <div class="avatar">
+            <div class="w-14 rounded-full cursor-pointer hover:border-2">
+              <img :src="employee.profilePicture" />
+            </div>
+          </div>
+        </div>
         <div class="navbar-start">
-          <div class="text-sm breadcrumbs hidden">
+          <div class="text-sm breadcrumbs hidden sm:block">
             <ul>
               <template v-for="routePath in route.path.split('/')">
                 <li>
@@ -145,4 +153,5 @@ const currentTime = ref<Date>(new Date());
       </ul>
     </div>
   </div>
+  <BottomNavbar />
 </template>

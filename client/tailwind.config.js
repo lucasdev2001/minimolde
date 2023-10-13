@@ -5,15 +5,10 @@ export default {
     extend: {},
   },
   daisyui: {
-    themes: [
-      "corporate"
-      /* {
-        dark: {
-          ...require("daisyui/src/theming/themes")["[data-theme=dark]"],
-          primary: "#4b6bfb",
-        },
-      }, */
-    ],
+    themes: ["winter", {
+      
+    }],
+
   },
   plugins: [require("@tailwindcss/typography"), require("daisyui")],
 };

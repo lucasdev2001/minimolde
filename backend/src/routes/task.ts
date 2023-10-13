@@ -10,14 +10,34 @@ task.post("/", async c => {
 });
 
 task.get("/", async c => {
-  const tasks = await Task.find({});
-  return c.json(tasks, 200);
+  const { limit, page } = c.req.query();
+  const tasks = await Task.find({})
+    .skip(Number(page) * Number(limit))
+    .limit(Number(limit));
+  const pages = Math.ceil((await Task.countDocuments()) / Number(limit));
+  return c.json({
+    tasks,
+    pages: pages,
+  });
 });
 
 task.get("/assigned-to/:id", async c => {
+  const { limit, page, status, title } = c.req.query();
+
   const id = c.req.param("id");
-  const tasks = await Task.find({ assignedTo: id });
-  return c.json(tasks, 200);
+
+  const pages = Math.ceil((await Task.countDocuments()) / Number(limit));
+  const tasks = await Task.find({
+    assignedTo: id,
+    status: status ?? ("started" || "inProgress" || "completed"),
+    title: title ?? /.*/g,
+  })
+    .skip(Number(page) * Number(limit))
+    .limit(Number(limit));
+  return c.json({
+    tasks,
+    pages: pages, //starts at zero,
+  });
 });
 
 export default task;

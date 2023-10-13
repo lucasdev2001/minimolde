@@ -40,7 +40,7 @@ const handleUploadFile = async (e: Event) => {
 </script>
 
 <template>
-  <main class="p-3">
+  <main class="flex flex-col p-3 gap-3 h-full">
     <hgroup class="prose">
       <h2>Files</h2>
     </hgroup>
@@ -51,33 +51,40 @@ const handleUploadFile = async (e: Event) => {
       </button>
     </div>
     <div class="overflow-x-auto">
-      <table class="table table-xs z-1">
+      <table class="table">
         <!-- head -->
         <thead>
-          <tr class="text-justify">
-            <th>
-              Name
-              <label class="swap">
-                <input type="checkbox" />
-                <i class="fa-solid fa-arrow-down swap-on"></i>
-                <i class="fa-solid fa-arrow-up swap-off"></i>
-              </label>
-            </th>
-            <th>Created At</th>
-            <th>Download</th>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Job</th>
+            <th>Favorite Color</th>
           </tr>
         </thead>
-        <tbody v-for="(file, index) in files">
+        <tbody>
           <!-- row 1 -->
-          <tr class="hover text-justify">
-            <td>{{ file.originalName }}</td>
-            <td>{{ new Date(file.created_at).toLocaleString() }}</td>
-            <td>
-              <a :href="apiAdress + '/files/' + file.fileName" download>
-                <i class="fa-solid fa-download"></i>
-              </a>
-            </td>
+          <tr class="bg-base-200">
+            <th>1</th>
+            <td>Cy Ganderton</td>
+            <td>Quality Control Specialist</td>
+            <td>Blue</td>
           </tr>
+          <!-- row 2 -->
+          <tr>
+            <th>2</th>
+            <td>Hart Hagerty</td>
+            <td>Desktop Support Technician</td>
+            <td>Purple</td>
+          </tr>
+          <!-- row 3 -->
+          <template v-for="_ in 10">
+            <tr>
+              <th>3</th>
+              <td>Brice Swyre</td>
+              <td>Tax Accountant</td>
+              <td>Red</td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
