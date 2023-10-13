@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-auth.post("/", async c => {
+auth.post("/", async (c) => {
   const body = await c.req.json();
   const employee = await Employee.findOne({
     email: body.email,
@@ -55,7 +55,7 @@ auth.post("/", async c => {
   return c.json(token, 200);
 });
 
-auth.post("/create-account", async c => {
+auth.post("/create-account", async (c) => {
   const body = await c.req.json();
 
   const exists = await Employee.exists({ email: body.email });
@@ -75,20 +75,21 @@ auth.post("/create-account", async c => {
     expiresIn: 60 * 60,
   });
 
-  const verifyEmail = await transporter.sendMail({
-    from: '"Minimolde bot 👻" minimolde@minimolde.cloud',
-    to: "lucasdev2001@gmail.com",
-    subject: "Verify your minimolde account",
-    text: "this link will expire in 30 minutes",
-    html: `<b>Here is your verification link http://localhost:5173/#/auth/verify-email/${token}</b>`,
-  });
-  console.log(verifyEmail);
+  if (Number(process.env.PRODUCTION)) {
+    await transporter.sendMail({
+      from: '"Minimolde bot 👻" minimolde@minimolde.cloud',
+      to: "lucasdev2001@gmail.com",
+      subject: "Verify your minimolde account",
+      text: "this link will expire in 30 minutes",
+      html: `<b>Here is your verification link</b>`,
+    });
+  }
 
   return c.json(token, 201);
 });
 
 auth.use("/verify-account", jwt({ secret }));
-auth.get("/verify-account", async c => {
+auth.get("/verify-account", async (c) => {
   const authorization = c.req.header("Authorization");
   if (!authorization)
     throw new HTTPException(409, { message: "Missing token" });

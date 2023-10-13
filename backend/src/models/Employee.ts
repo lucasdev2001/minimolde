@@ -24,7 +24,7 @@ const employeeSchema = new Schema(
     profilePicture: String,
     verified: {
       type: Boolean,
-      default: false,
+      default: process.env.DEVELOPMENT,
     },
   },
   { strict: true }
@@ -32,7 +32,7 @@ const employeeSchema = new Schema(
 
 employeeSchema.pre("save", async function (next) {
   if (this.isNew) {
-    const hash = await bcrypt.hash(this.password, 10).then(hash => hash);
+    const hash = await bcrypt.hash(this.password, 10).then((hash) => hash);
     this.password = hash;
     this.profilePicture = `https://api.dicebear.com/7.x/thumbs/svg?seed=${this.name}&radius=50`;
   }

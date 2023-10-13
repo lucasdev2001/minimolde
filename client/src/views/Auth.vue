@@ -46,7 +46,7 @@ const handleSignUp = (event: Event) => {
 
   axios
     .post("http://localhost:3000/auth/create-account", formJson)
-    .then(response => {
+    .then((response) => {
       console.log(response);
       toggleNwEmployeeDialog();
     })
@@ -63,7 +63,7 @@ const handleSignIn = (event: Event) => {
 
   axios
     .post("http://localhost:3000/auth", formJson)
-    .then(response => {
+    .then((response) => {
       localStorage.setItem("token", response.data);
       router.push({ name: "home" });
     })
@@ -88,7 +88,7 @@ const handleSignIn = (event: Event) => {
       ></video>
     </aside>
     <article
-      class="flex flex-col h-full justify-evenly lg:basis-1/3 place-items-center p-3"
+      class="flex flex-col h-full lg:basis-1/2 place-items-center justify-around p-3"
     >
       <figure>
         <img src="../assets/logo.svg" class="w-32" />

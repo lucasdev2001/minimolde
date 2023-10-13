@@ -26,6 +26,7 @@ onBeforeMount(async () => {
     );
     employee.value = response.data;
   }
+  console.log(employee.value);
 });
 
 const router = useRouter();

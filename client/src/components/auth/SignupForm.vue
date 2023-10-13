@@ -6,7 +6,7 @@ const handleSubmit = (event: Event) => {
 };
 </script>
 <template>
-  <form class="flex flex-col gap-5" @submit="handleSubmit">
+  <form class="flex flex-col gap-3" @submit="handleSubmit">
     <hgroup class="prose text-center">
       <h1 class="mb-0 font-thin">Hello there, Welcome!</h1>
       <p>Please enter your details</p>
@@ -36,7 +36,7 @@ const handleSubmit = (event: Event) => {
         name="password"
         type="password"
         class="input input-bordered input-primary w-full"
-        required  
+        required
       />
     </label>
 
