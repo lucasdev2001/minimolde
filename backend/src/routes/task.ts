@@ -30,7 +30,7 @@ task.get("/assigned-to/:id", async c => {
   const tasks = await Task.find({
     assignedTo: id,
     status: status ?? ("started" || "inProgress" || "completed"),
-    title: title ?? /.*/g,
+    title: title ? new RegExp(title, "i") : /.*/g,
   })
     .skip(Number(page) * Number(limit))
     .limit(Number(limit));

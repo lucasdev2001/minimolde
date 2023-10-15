@@ -21,7 +21,7 @@ const employeeSchema = new Schema(
       ref: "Team",
     },
     tasks: [mongoose.Types.ObjectId],
-    profilePicture: String,
+    profilePicture: String || null,
     verified: {
       type: Boolean,
       default: process.env.DEVELOPMENT,
@@ -32,9 +32,9 @@ const employeeSchema = new Schema(
 
 employeeSchema.pre("save", async function (next) {
   if (this.isNew) {
-    const hash = await bcrypt.hash(this.password, 10).then((hash) => hash);
+    const hash = await bcrypt.hash(this.password, 10).then(hash => hash);
+    this.profilePicture = `https://picsum.photos/seed/${this.name}/200/300`;
     this.password = hash;
-    this.profilePicture = `https://api.dicebear.com/7.x/thumbs/svg?seed=${this.name}&radius=50`;
   }
   return next();
 });

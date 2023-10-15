@@ -6,7 +6,9 @@ import TeamsVue from "./views/Teams.vue";
 import AuthVue from "./views/Auth.vue";
 import VerifyEmailVue from "./views/VerifyEmail.vue";
 import axios from "axios";
+import ManageTeamsVue from "./views/ManageTeams.vue";
 import jwtDecode from "jwt-decode";
+import { Token } from "./types";
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -15,17 +17,14 @@ export const router = createRouter({
     {
       path: "/home",
       component: NavbarVue,
-      meta: {
-        employee: (() => {
-          try {
-            const token = localStorage.getItem("token");
-            if (token) {
-              return jwtDecode(token);
-            }
-          } catch (error) {
-            return null;
-          }
-        })(),
+      beforeEnter: async () => {
+        const token = localStorage.getItem("token");
+        const canAccess = await isAuthenticated(token);
+
+        if (!canAccess) {
+          localStorage.removeItem("token");
+          return { name: "Auth" };
+        }
       },
 
       children: [
@@ -49,9 +48,9 @@ export const router = createRouter({
           name: "manage",
           children: [
             {
-              path: "manage-teams",
+              path: "Manage-teams",
               name: "manage-teams",
-              component: HomeVue,
+              component: ManageTeamsVue,
             },
             {
               path: "manage-employees",
@@ -100,6 +99,20 @@ export const router = createRouter({
   ],
 });
 
+router.beforeEach(to => {
+  if (to.meta.requiresAuth !== false) {
+    const token = localStorage.getItem("token");
+    if (token) {
+      if (isTokenExpired(token)) {
+        return { name: "Auth" };
+      }
+    }
+  }
+});
+
+const isTokenExpired = (token: string) =>
+  Date.now() / 1000 >= (jwtDecode(token) as Token).exp;
+
 const isAuthenticated = async (token: string | null) => {
   //lazzy called
   const axiosConfig = {
@@ -114,16 +127,3 @@ const isAuthenticated = async (token: string | null) => {
     })
     .catch(() => false);
 };
-
-router.beforeEach(async to => {
-  console.log(to.meta.employee);
-
-  if (to.meta.requiresAuth !== false) {
-    const token = localStorage.getItem("token");
-    const canAccess = await isAuthenticated(token);
-    if (!canAccess) {
-      localStorage.removeItem("token");
-      return { name: "Auth" };
-    }
-  }
-});

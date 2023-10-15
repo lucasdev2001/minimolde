@@ -19,3 +19,8 @@ export interface Task {
   assignedTo: string[];
   status: "started" | "progress" | "completed";
 }
+
+export interface Token {
+  _id: string;
+  exp: number;
+}

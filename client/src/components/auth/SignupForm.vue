@@ -1,5 +1,8 @@
 <script setup lang="ts">
 const emit = defineEmits(["submit"]);
+defineProps({
+  isLoading: Boolean,
+});
 
 const handleSubmit = (event: Event) => {
   emit("submit", event);
@@ -40,6 +43,9 @@ const handleSubmit = (event: Event) => {
       />
     </label>
 
-    <button class="btn btn-primary text-white">Sign up</button>
+    <button class="btn btn-primary text-white">
+      <span class="loading loading-spinner" v-if="isLoading"></span>
+      Sign up
+    </button>
   </form>
 </template>

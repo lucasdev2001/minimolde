@@ -2,11 +2,15 @@
 import axios from "axios";
 import { ref } from "vue";
 import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+
+//refs
 const apiResponseMessage = ref<{
   message: string;
   success: boolean;
 } | null>();
 const assignedToRadioInput = ref("");
+
+//functions
 
 const handleCreateTask = async (event: Event) => {
   event.preventDefault();

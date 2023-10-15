@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-auth.post("/", async (c) => {
+auth.post("/", async c => {
   const body = await c.req.json();
   const employee = await Employee.findOne({
     email: body.email,
@@ -55,7 +55,7 @@ auth.post("/", async (c) => {
   return c.json(token, 200);
 });
 
-auth.post("/create-account", async (c) => {
+auth.post("/create-account", async c => {
   const body = await c.req.json();
 
   const exists = await Employee.exists({ email: body.email });
@@ -72,7 +72,7 @@ auth.post("/create-account", async (c) => {
   };
 
   const token = await sign(payload, process.env.JWT_SECRET!, {
-    expiresIn: 60 * 60,
+    expiresIn: 60 * 30,
   });
 
   if (Number(process.env.PRODUCTION)) {
@@ -89,7 +89,7 @@ auth.post("/create-account", async (c) => {
 });
 
 auth.use("/verify-account", jwt({ secret }));
-auth.get("/verify-account", async (c) => {
+auth.get("/verify-account", async c => {
   const authorization = c.req.header("Authorization");
   if (!authorization)
     throw new HTTPException(409, { message: "Missing token" });

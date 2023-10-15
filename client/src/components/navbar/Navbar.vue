@@ -1,43 +1,29 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { ref, onBeforeMount } from "vue";
-import kebabCase from "lodash/kebabCase";
 
-import { Employee } from "../../types";
-import jwt_decode from "jwt-decode";
-import axios from "axios";
 import BottomNavbar from "./BottomNavbar.vue";
 
-const codedToken = localStorage.getItem("token");
-const employee = ref<Employee>({
-  _id: "",
-  email: "",
-  name: "",
-  roles: [],
-  teams: [],
-  profilePicture: "",
-});
-
-onBeforeMount(async () => {
-  if (codedToken) {
-    const decoded = jwt_decode(codedToken) as Employee;
-    const response = await axios.get(
-      import.meta.env.VITE_API_ADDRES_FIND_ONE_EMPLOYEE + decoded._id
-    );
-    employee.value = response.data;
-  }
-  console.log(employee.value);
-});
-
+import { employee } from "../../stores/employeeStore";
+import { onBeforeMount } from "vue";
+import axios from "axios";
+import jwtDecode from "jwt-decode";
+import { Token } from "../../types";
 const router = useRouter();
+
 const route = useRoute();
 
-const logout = () => {
-  localStorage.removeItem("token");
-  router.push({ name: "Auth" });
-};
-
-const currentTime = ref<Date>(new Date());
+onBeforeMount(async () => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    const decoded = jwtDecode(token) as Token;
+    axios
+      .get(import.meta.env.VITE_API_ADDRES_FIND_EMPLOYEE + decoded._id)
+      .then(res => {
+        console.log(res.data);
+        employee.value = res.data;
+      });
+  }
+});
 </script>
 <template>
   <div class="drawer sm:drawer-open">
@@ -46,8 +32,10 @@ const currentTime = ref<Date>(new Date());
       <div class="navbar bg-base- rounded-md">
         <div class="navbar-start sm:hidden">
           <div class="avatar">
-            <div class="w-14 rounded-full cursor-pointer hover:border-2">
-              <img :src="employee.profilePicture" />
+            <div class="rounded-full cursor-pointer hover:border-2 w-14">
+              <label for="dashboard-drawer">
+                <!-- <img :src="employee.profilePicture" /> -->
+              </label>
             </div>
           </div>
         </div>
@@ -84,68 +72,71 @@ const currentTime = ref<Date>(new Date());
         aria-label="close sidebar"
         class="drawer-overlay"
       ></label>
-      <ul
-        class="menu min-h-full bg-base-100 text-base-content flex flex-col gap-7 p-3"
-      >
-        <div class="dropdown">
-          <label tabindex="0" class="">
-            <div class="flex place-items-center">
-              <div class="avatar m-3">
-                <div class="w-24 rounded-full cursor-pointer hover:border-2">
-                  <img :src="employee.profilePicture" />
-                </div>
-              </div>
-              <hgroup class="prose">
-                <h3 class="font-medium mb-0">{{ employee.name }}</h3>
-
-                <p class="mt-0 text-justify">
-                  {{ currentTime?.toLocaleDateString() }}
-                </p>
-              </hgroup>
-            </div>
-          </label>
-          <ul
-            tabindex="0"
-            class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-          >
-            <li><a>Profile</a></li>
-            <li><a @click="logout">Logout</a></li>
-          </ul>
-        </div>
-
+      <ul class="menu p-4 w-80 min-h-full z-50 bg-base-100 justify-between">
         <div class="flex flex-col gap-3">
+          <div class="avatar place-items-center gap-3">
+            <div class="w-14 rounded-full">
+              <img :src="employee.profilePicture" />
+            </div>
+            <hgroup>
+              <h3>{{ employee.name }}</h3>
+              <p>{{ employee.email }}</p>
+            </hgroup>
+          </div>
           <li>
-            <a class="focus" @click="router.push({ name: 'home' })">
+            <a class="bg-base-200" @click="router.push({ name: 'home' })">
               Home
-              <i class="ms-auto fa-solid fa-house"></i>
+              <i class="fa-solid fa-house ms-auto"></i>
             </a>
           </li>
           <li>
-            <a class="focus" @click="router.push({ name: 'files' })">
+            <a class="bg-base-200" @click="router.push({ name: 'files' })">
               Files
-              <i class="ms-auto fa-solid fa-box-archive"></i>
+              <i class="fa-solid fa-box-archive ms-auto"></i>
             </a>
           </li>
-          <ul class="menu bg-base-200 rounded-box">
+          <ul class="menu menu-xs bg-base-200 rounded-lg max-w-xs w-full">
             <li>
               <details open>
-                <summary>Teams</summary>
+                <summary class="p-2">
+                  Teams
+                  <i class="fa-solid fa-user-group ms-auto"></i>
+                </summary>
                 <ul>
-                  <template v-for="team in employee.teams">
-                    <li>
-                      <a
-                        class="truncate"
-                        @click="
-                          router.push({
-                            name: 'teams',
-                            params: { team: kebabCase(team.name) },
-                          })
-                        "
-                      >
-                        {{ team.name }}
-                      </a>
-                    </li>
-                  </template>
+                  <li>
+                    <a class="p-2"> Team </a>
+                  </li>
+                  <li>
+                    <a class="p-2"> Team </a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+          </ul>
+
+          <ul class="menu menu-xs bg-base-200 rounded-lg max-w-xs w-full">
+            <li>
+              <details open>
+                <summary class="p-2">
+                  Manage
+                  <i class="fa-solid fa-gear ms-auto fa-lg"></i>
+                </summary>
+                <ul>
+                  <li>
+                    <a
+                      class="p-2"
+                      @click="router.push({ name: 'manage-teams' })"
+                    >
+                      Teams
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      class="p-2"
+                      @click="router.push({ name: 'manage-employees' })"
+                      >Employees</a
+                    >
+                  </li>
                 </ul>
               </details>
             </li>

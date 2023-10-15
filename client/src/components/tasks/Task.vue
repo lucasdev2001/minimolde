@@ -6,7 +6,7 @@ defineProps({
 defineEmits(["test"]);
 </script>
 <template>
-  <div class="card bg-base-100 border-2 card-compact relative">
+  <div class="card bg-base-100 card-compact shadow-lg">
     <div class="card-title justify-end"></div>
     <div class="card-body">
       <div class="dropdown dropdown-end absolute top-4 end-4">
@@ -26,7 +26,7 @@ defineEmits(["test"]);
         <p>{{ description }}</p>
       </div>
     </div>
-    <div class="card-actions justify-end border-t-2 pt-3">
+    <div class="card-actions justify-end p-3">
       <div class="avatar-group -space-x-6">
         <div class="avatar">
           <div class="w-12">

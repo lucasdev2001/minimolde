@@ -15,6 +15,7 @@ onMounted(() => {
   axios(apiAdress + "/files").then(res => {
     files.value = res.data;
   });
+  console.log("mounted");
 });
 
 onChange(files => {
@@ -78,7 +79,7 @@ const handleUploadFile = async (e: Event) => {
           </tr>
           <!-- row 3 -->
           <template v-for="_ in 10">
-            <tr>
+            <tr class="hover:bg-base-200">
               <th>3</th>
               <td>Brice Swyre</td>
               <td>Tax Accountant</td>

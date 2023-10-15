@@ -11,6 +11,7 @@ const isNwEmployee = ref(false);
 const errorMessage = ref<string | null>("");
 const nwEmployeeDialog = ref<HTMLDialogElement>();
 const router = useRouter();
+const isLoading = ref(false);
 
 //consts
 const isNwEmployeeDialogOpen = ref(false);
@@ -43,14 +44,16 @@ const handleSignUp = (event: Event) => {
   const form = event.target as HTMLFormElement;
   const formData = new FormData(form);
   const formJson = Object.fromEntries(formData.entries());
+  isLoading.value = true;
 
   axios
     .post("http://localhost:3000/auth/create-account", formJson)
-    .then((response) => {
-      console.log(response);
+    .then(_ => {
+      isLoading.value = false;
       toggleNwEmployeeDialog();
     })
     .catch((error: AxiosError) => {
+      isLoading.value = false;
       handleErrorMessage((error.response?.data as string) ?? error.message);
     });
 };
@@ -60,14 +63,18 @@ const handleSignIn = (event: Event) => {
   const form = event.target as HTMLFormElement;
   const formData = new FormData(form);
   const formJson = Object.fromEntries(formData.entries());
+  isLoading.value = true;
 
   axios
     .post("http://localhost:3000/auth", formJson)
-    .then((response) => {
+    .then(response => {
       localStorage.setItem("token", response.data);
+      isLoading.value = false;
       router.push({ name: "home" });
     })
+
     .catch((error: AxiosError) => {
+      isLoading.value = false;
       handleErrorMessage((error.response?.data as string) ?? error.message);
     });
 };
@@ -94,8 +101,16 @@ const handleSignIn = (event: Event) => {
         <img src="../assets/logo.svg" class="w-32" />
       </figure>
 
-      <LoginForm v-if="!isNwEmployee" @submit="handleSignIn" />
-      <SignupForm v-if="isNwEmployee" @submit="handleSignUp" />
+      <LoginForm
+        v-if="!isNwEmployee"
+        @submit="handleSignIn"
+        :is-loading="isLoading"
+      />
+      <SignupForm
+        v-if="isNwEmployee"
+        @submit="handleSignUp"
+        :is-loading="isLoading"
+      />
 
       <p class="self-center label-text" v-if="!isNwEmployee">
         Don't have an account yet ?

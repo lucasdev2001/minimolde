@@ -1,5 +1,8 @@
 <script setup lang="ts">
 const emit = defineEmits(["submit", "teste"]);
+defineProps({
+  isLoading: Boolean,
+});
 
 const handleSubmit = (e: Event) => {
   emit("submit", e);
@@ -33,6 +36,9 @@ const handleSubmit = (e: Event) => {
 
     <a class="link label-text self-end">Forgot your password ?</a>
 
-    <button class="btn btn-primary text-white">Log In</button>
+    <button class="btn btn-primary text-white">
+      <span class="loading loading-spinner" v-if="isLoading"></span>
+      Log In
+    </button>
   </form>
 </template>
