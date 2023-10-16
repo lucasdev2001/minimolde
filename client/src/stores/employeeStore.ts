@@ -1,7 +1,5 @@
 import { ref } from "vue";
-import { Employee, Token } from "../types";
-import axios from "axios";
-import jwtDecode from "jwt-decode";
+import { Employee } from "../types";
 
 export const employee = ref<Employee>({
   _id: "",

@@ -35,7 +35,7 @@ const verifyAccount = async () => {
   try {
     isLoading.value = true;
     const response = await axios.get(
-      import.meta.env.VITE_API_ADDRES_VERIFY_ACCOUNT,
+      import.meta.env.VITE_API_VERIFY_ACCOUNT,
       axiosConfig
     );
     isLoading.value = false;

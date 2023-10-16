@@ -17,19 +17,21 @@ export const router = createRouter({
     {
       path: "/home",
       component: NavbarVue,
-      beforeEnter: async () => {
+      beforeEnter: async (to, from, next) => {
         const token = localStorage.getItem("token");
         const canAccess = await isAuthenticated(token);
 
-        if (!canAccess) {
+        if (canAccess) {
+          return next();
+        } else {
           localStorage.removeItem("token");
-          return { name: "Auth" };
+          return next({ name: "Auth" });
         }
       },
 
       children: [
         {
-          path: "/home",
+          path: "",
           name: "home",
           component: HomeVue,
         },

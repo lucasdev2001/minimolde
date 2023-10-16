@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useRoute } from "vue-router";
 import Task from "../components/teams/Task.vue";
-import { onBeforeMount, ref } from "vue";
+import { onBeforeMount, reactive, ref } from "vue";
 import { Team } from "../types";
 import axios from "axios";
 import startCase from "lodash/startCase";
@@ -12,10 +12,19 @@ const team = ref<Team>({
   description: "",
   employees: [],
 });
+const query = reactive<{
+  name?: string;
+  limit: number;
+  page: number;
+}>({
+  limit: 4,
+  page: 0,
+  name: "",
+});
 const teamName = (route.params.team as string).replace(/-/g, " ");
 onBeforeMount(async () => {
   const response = await axios.get(
-    import.meta.env.VITE_API_ADDRES_FIND_ONE_TEAM + startCase(teamName)
+    import.meta.env.VITE_API_TEAM + startCase(teamName)
   );
   team.value = response.data as Team;
   console.log(team.value.employees);

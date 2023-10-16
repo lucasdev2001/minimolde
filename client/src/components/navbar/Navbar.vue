@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import BottomNavbar from "./BottomNavbar.vue";
 
 import { employee } from "../../stores/employeeStore";
-import { onBeforeMount } from "vue";
+import { onMounted } from "vue";
 import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { Token } from "../../types";
@@ -12,16 +12,15 @@ const router = useRouter();
 
 const route = useRoute();
 
-onBeforeMount(async () => {
+onMounted(async () => {
+  console.log("mounted");
   const token = localStorage.getItem("token");
   if (token) {
     const decoded = jwtDecode(token) as Token;
-    axios
-      .get(import.meta.env.VITE_API_ADDRES_FIND_EMPLOYEE + decoded._id)
-      .then(res => {
-        console.log(res.data);
-        employee.value = res.data;
-      });
+    axios.get("http://localhost:3000/employees/" + decoded._id).then(res => {
+      console.log(res.data);
+      employee.value = res.data;
+    });
   }
 });
 </script>
@@ -34,7 +33,7 @@ onBeforeMount(async () => {
           <div class="avatar">
             <div class="rounded-full cursor-pointer hover:border-2 w-14">
               <label for="dashboard-drawer">
-                <!-- <img :src="employee.profilePicture" /> -->
+                <img :src="employee.profilePicture" />
               </label>
             </div>
           </div>
@@ -64,7 +63,9 @@ onBeforeMount(async () => {
           </button>
         </div>
       </div>
-      <RouterView />
+      <div class="p-3">
+        <RouterView />
+      </div>
     </div>
     <div class="drawer-side z-50">
       <label

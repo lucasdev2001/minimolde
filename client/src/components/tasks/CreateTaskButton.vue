@@ -26,7 +26,7 @@ const handleCreateTask = async (event: Event) => {
 
   try {
     const response = await axios.post(
-      import.meta.env.VITE_API_ADDRES_TASKS,
+      import.meta.env.VITE_API_TASKS,
       formJson,
       axiosConfig
     );
