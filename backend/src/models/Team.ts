@@ -7,8 +7,12 @@ const teamSchema = new Schema(
     name: {
       type: String,
       unique: true,
+      required: true,
     },
-    description: String,
+    description: {
+      type: String,
+      required: true,
+    },
     employees: {
       type: [mongoose.Types.ObjectId],
       ref: "Employee",

@@ -14,7 +14,10 @@ const secret = process.env.JWT_SECRET!;
 app.onError(errorHandler);
 
 app.use("/*", cors());
-
+app.use(async (_, next) => {
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  await next();
+});
 app.use("/validate-token", jwt({ secret }));
 app.get("/validate-token", c => {
   const payload = c.get("jwtPayload");
@@ -24,7 +27,7 @@ app.get("/validate-token", c => {
 app.get("/", c => c.text("pong 🏓"));
 
 app.route("/employees/", employee);
-app.route("/teams", team);
+app.route("/teams/", team);
 app.route("/tasks", task);
 app.route("/auth", auth);
 

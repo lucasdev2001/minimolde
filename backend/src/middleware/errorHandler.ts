@@ -5,6 +5,6 @@ export default (err: Error, c: Context<Env, any, {}>) => {
   if (err instanceof HTTPException) {
     return err.getResponse();
   }
-  console.log(err);
+  console.log(err.message);
   return c.json(err.message, 500);
 };
