@@ -2,10 +2,8 @@
 import { reactive, ref } from "vue";
 import { Employee } from "../../types";
 import axios, { AxiosError } from "axios";
-import AvatarGroup from "../employees/AvatarGroup.vue";
-import ApiResponseToast from "../utils/ApiResponseToast.vue";
 import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
-import { apiResponse } from "../../stores/apiResponse";
+
 //emits
 
 const emit = defineEmits(["isLoading:true", "isLoading:false"]);
@@ -34,7 +32,7 @@ const query = reactive<{
 });
 
 //functions
-const toggleCreateTeamDialog = async () => {
+const toggleDialog = async () => {
   if (createTeamDialog.value?.open) {
     createTeamDialog.value?.close();
   } else {
@@ -69,29 +67,24 @@ const handleCreateTeam = async (event: Event) => {
   const formData = new FormData(form);
   const formJson = Object.fromEntries(formData.entries());
 
-  const employees = checkedEmployees.value.map(employee => {
-    return JSON.parse(employee)._id;
-  });
-
   const team = {
     ...formJson,
-    employees,
+    employees: checkedEmployees.value,
   };
 
   try {
     const response = await axios.post(import.meta.env.VITE_API_TEAM, team);
-    toggleCreateTeamDialog();
+    toggleDialog();
     createTeamForm.value?.reset();
     checkedEmployees.value = [];
-    handleApiResponseMessage(response.data, true, apiResponse);
+    handleApiResponseMessage(response.data, true);
   } catch (error) {
-    toggleCreateTeamDialog();
+    toggleDialog();
     createTeamForm.value?.reset();
     checkedEmployees.value = [];
     handleApiResponseMessage(
       String((error as AxiosError).response?.data),
-      false,
-      apiResponse
+      false
     );
   }
 };
@@ -117,7 +110,7 @@ const handleSearch = async () => {
 //exposes
 
 defineExpose({
-  toggleCreateTeamDialog,
+  toggleDialog,
 });
 </script>
 <template>
@@ -125,16 +118,14 @@ defineExpose({
     <div class="modal-box min-h-0 sm:min-h-0">
       <button
         class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-        @click="toggleCreateTeamDialog"
+        @click="toggleDialog"
       >
         <i class="fa-solid fa-x"></i>
       </button>
       <div>
         <h3 class="font-bold text-lg">Create a new team</h3>
       </div>
-      <AvatarGroup
-        :employees="[...checkedEmployees.map(employee => JSON.parse(employee))]"
-      />
+
       <form
         ref="createTeamForm"
         method="post"
@@ -197,7 +188,7 @@ defineExpose({
         </div>
 
         <div class="flex flex-col">
-          <table class="table">
+          <table class="table table-xs">
             <!-- head -->
             <thead>
               <tr>
@@ -215,7 +206,7 @@ defineExpose({
                         type="checkbox"
                         class="checkbox"
                         name="employees"
-                        :value="JSON.stringify(employee)"
+                        :value="employee._id"
                         v-model="checkedEmployees"
                       />
                     </label>
@@ -262,15 +253,11 @@ defineExpose({
         </div>
 
         <div class="modal-action">
-          <button class="btn" type="button" @click="toggleCreateTeamDialog">
-            Close
-          </button>
+          <button class="btn" type="button" @click="toggleDialog">Close</button>
           <button class="btn btn-primary" type="submit">Create</button>
         </div>
       </form>
     </div>
   </dialog>
-
-  <ApiResponseToast />
 </template>
 <style></style>

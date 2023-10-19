@@ -9,54 +9,85 @@ const { MINIO_DEFAULT_BUCKET } = process.env;
 
 file.post("/", async c => {
   const body = await c.req.parseBody();
-  console.log(body);
 
   const file = body.file as File;
   const customName = body.customName;
+  const assignedTo = body.assignedTo;
+  console.log(assignedTo);
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  console.log(buffer);
-
-  const fileName = new Types.ObjectId() + path.extname(file.name);
-
-  const putObjectPromise = new Promise(async (resolve, reject) => {
-    minioClient.putObject(
-      MINIO_DEFAULT_BUCKET!,
-      fileName,
-      buffer,
-      async err => {
-        if (err) reject(err);
-        resolve(true);
-      }
-    );
-  });
-
-  await putObjectPromise;
+  const name = new Types.ObjectId() + path.extname(file.name);
 
   const newFile = new File({
-    fileName,
+    name,
+    assignedTo,
     originalName: customName ?? file.name,
   });
 
   await newFile.save();
 
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const putObjectPromise = new Promise(async (resolve, reject) => {
+    minioClient.putObject(MINIO_DEFAULT_BUCKET!, name, buffer, async err => {
+      if (err) reject(err);
+      resolve(true);
+    });
+  });
+
+  try {
+    await putObjectPromise;
+    newFile.status = "completed";
+    newFile.save();
+  } catch (error) {
+    newFile.status = "failed";
+    newFile.save();
+
+    console.log(error);
+  }
+
   return c.json(body, 201);
 });
 
-file.get("/", async c => {
-  const files = await File.find({}).sort({ originalName: "descending" });
-  return c.json(files);
+file.get("/assigned-to/:id", async c => {
+  const { limit, page, name } = await c.req.queries();
+
+  const _id = c.req.param("id");
+  console.log(_id);
+
+  const files = await File.find({
+    assignedTo: _id,
+    name: name ? new RegExp(String(name), "i") : /.*/g,
+  })
+    .limit(Number(limit))
+    .skip(Number(page) * Number(limit));
+
+  const pages = await File.countDocuments({
+    assignedTo: _id,
+    name: name ? new RegExp(String(name), "i") : /.*/g,
+  });
+
+  return c.json({
+    files,
+    pages,
+  });
 });
 
-file.get("/:fileName", async c => {
-  const fileName = c.req.param("fileName");
+file.delete("/:name", async c => {
+  const name = c.req.param("name");
+  await File.findOneAndDelete({ name });
+  await minioClient.removeObject(MINIO_DEFAULT_BUCKET!, name);
+  return c.json("succesfully deleted", 200);
+});
+
+file.get("/download/:name", async c => {
+  const name = c.req.param("name");
 
   const presignedUrlpromise: Promise<string> = new Promise(
     (resolve, reject) => {
       minioClient.presignedUrl(
         "GET",
         MINIO_DEFAULT_BUCKET!,
-        fileName,
+        name,
         1,
         (err, presignedUrl) => {
           if (err) return reject(err);

@@ -1,14 +1,15 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import NavbarVue from "./components/navbar/Navbar.vue";
-import FilesVue from "./views/Files.vue";
-import HomeVue from "./views/Home.vue";
-import TeamsVue from "./views/Teams.vue";
-import AuthVue from "./views/Auth.vue";
-import VerifyEmailVue from "./views/VerifyEmail.vue";
+import FilesVue from "./views/files/Files.vue";
+import HomeVue from "./views/home/Home.vue";
+import TeamsVue from "./views/teams/Teams.vue";
+import AuthVue from "./views/auth/Auth.vue";
+import VerifyEmailVue from "./views/auth/VerifyEmail.vue";
 import axios from "axios";
-import ManageTeamsVue from "./views/ManageTeams.vue";
+import ManageTeamsVue from "./views/manage/ManageTeams.vue";
 import jwtDecode from "jwt-decode";
 import { Token } from "./types";
+import { routeLoading } from "./stores/routeLoading";
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -17,9 +18,11 @@ export const router = createRouter({
     {
       path: "/home",
       component: NavbarVue,
-      beforeEnter: async (to, from, next) => {
+      beforeEnter: async (_to, _from, next) => {
         const token = localStorage.getItem("token");
+        routeLoading.value = true;
         const canAccess = await isAuthenticated(token);
+        routeLoading.value = false;
 
         if (canAccess) {
           return next();
@@ -50,7 +53,7 @@ export const router = createRouter({
           name: "manage",
           children: [
             {
-              path: "Manage-teams",
+              path: "manage-teams",
               name: "manage-teams",
               component: ManageTeamsVue,
             },
@@ -73,9 +76,13 @@ export const router = createRouter({
       beforeEnter: async () => {
         const token = localStorage.getItem("token");
         if (token) {
+          routeLoading.value = true;
           const canAccess = await isAuthenticated(token);
+          routeLoading.value = false;
           if (canAccess) {
             return { name: "home" };
+          } else {
+            localStorage.removeItem("token");
           }
         }
       },
@@ -111,6 +118,8 @@ router.beforeEach(to => {
     }
   }
 });
+
+router.afterEach(() => {});
 
 const isTokenExpired = (token: string) =>
   Date.now() / 1000 >= (jwtDecode(token) as Token).exp;

@@ -1,12 +1,11 @@
-import { Ref } from "vue";
+import { apiResponse } from "../stores/apiResponse";
 
 export default function handleApiResponseMessage(
   message: string,
-  success: boolean,
-  ref: Ref
+  success: boolean
 ) {
-  ref.value = { message, success };
+  apiResponse.value = { message, success };
   setTimeout(() => {
-    ref.value = null;
+    apiResponse.value = null;
   }, 3000);
 }

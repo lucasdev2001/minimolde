@@ -14,10 +14,10 @@ const secret = process.env.JWT_SECRET!;
 app.onError(errorHandler);
 
 app.use("/*", cors());
-app.use(async (_, next) => {
-  await new Promise(resolve => setTimeout(resolve, 2000));
+/* app.use(async (_, next) => {
+  await new Promise(resolve => setTimeout(resolve, 1000));
   await next();
-});
+}); */
 app.use("/validate-token", jwt({ secret }));
 app.get("/validate-token", c => {
   const payload = c.get("jwtPayload");
@@ -32,6 +32,6 @@ app.route("/tasks", task);
 app.route("/auth", auth);
 
 // app.use("/files", jwt({ secret }));
-app.route("/files", file);
+app.route("/files/", file);
 
 export default app;

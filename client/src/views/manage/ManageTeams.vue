@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
-import CreateTeamDialog from "../components/teams/CreateTeamDialog.vue";
-import { employee } from "../stores/employeeStore";
-import { Team } from "../types";
+import CreateTeamDialog from "./TeamDialog.vue";
+import { employee } from "../../stores/employeeStore";
+import { Team } from "../../types";
 import axios from "axios";
 
 //lifecycles
@@ -10,6 +10,8 @@ import axios from "axios";
 onMounted(async () => {
   isLoading.value = true;
   teamsWithPaging.value = await fetchTeamsWithQuery(query.limit, query.page);
+  console.log(teamsWithPaging.value.teams);
+
   isLoading.value = false;
 });
 
@@ -69,11 +71,9 @@ const handlePagination = async (pageNumber: number) => {
     query.name
   );
 };
-
-const handleDeleteTeam = async (_id: string) => {};
 </script>
 <template>
-  <header class="flex flex-col justify-between">
+  <header class="flex flex-row justify-between">
     <hgroup class="prose font-thin">
       <h1 class="font-thin m-0">Hi {{ employee.name }} 👋</h1>
       <h2 class="font-thin m-0">Manage your teams</h2>
@@ -109,6 +109,7 @@ const handleDeleteTeam = async (_id: string) => {};
       <thead>
         <tr>
           <th>Team name</th>
+          <th>Employees</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -117,6 +118,15 @@ const handleDeleteTeam = async (_id: string) => {};
         <template v-for="team in teamsWithPaging.teams">
           <tr class="hover:bg-base-200">
             <td>{{ team.name }}</td>
+            <td>
+              <div class="avatar-group -space-x-6">
+                <div class="avatar placeholder">
+                  <div class="w-12 bg-neutral-focus text-neutral-content">
+                    <span>+20</span>
+                  </div>
+                </div>
+              </div>
+            </td>
 
             <td class="flex gap-1">
               <button class="btn btn-ghost btn-xs">
@@ -137,7 +147,7 @@ const handleDeleteTeam = async (_id: string) => {};
         </template>
       </tbody>
     </table>
-    <div class="join justify-end mb-10">
+    <div class="join justify-end pb-10">
       <template v-for="(_, index) in teamsWithPaging.pages">
         <button
           class="join-item btn"
@@ -150,24 +160,6 @@ const handleDeleteTeam = async (_id: string) => {};
       </template>
     </div>
   </main>
-
-  <!-- off-canvas -->
-
-  <!-- Open the modal using ID.showModal() method -->
-  <button class="btn" onclick="my_modal_5.showModal()">open modal</button>
-  <dialog id="my_modal_5" class="modal modal-top sm:modal-middle">
-    <form method="dialog" class="modal-box">
-      <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-        <i class="fa-solid fa-x"></i>
-      </button>
-      <h3 class="font-bold text-lg">Are you sure ?</h3>
-      <p>Delete team</p>
-      <div class="modal-action">
-        <button class="btn">Close</button>
-        <button class="btn btn-error">Delete</button>
-      </div>
-    </form>
-  </dialog>
 
   <CreateTeamDialog
     @is-loading:true="isLoading = true"

@@ -2,7 +2,7 @@
 import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { useRoute } from "vue-router";
-import { Employee } from "../types";
+import { Employee } from "../../types";
 import { onBeforeMount, ref } from "vue";
 
 const route = useRoute();
@@ -34,10 +34,7 @@ const verifyAccount = async () => {
   };
   try {
     isLoading.value = true;
-    const response = await axios.get(
-      import.meta.env.VITE_API_VERIFY_ACCOUNT,
-      axiosConfig
-    );
+    await axios.get(import.meta.env.VITE_API_VERIFY_ACCOUNT, axiosConfig);
     isLoading.value = false;
   } catch (error) {
     console.log(error);

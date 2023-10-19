@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ref } from "vue";
-import LoginForm from "../components/auth/LoginForm.vue";
-import SignupForm from "../components/auth/SignupForm.vue";
+import LoginForm from "./LoginForm.vue";
+import SignupForm from "./SignupForm.vue";
 import axios, { AxiosError } from "axios";
-import Toast from "../components/Toast.vue";
+import Toast from "../../components/Toast.vue";
 import { useRouter } from "vue-router";
 
 //refs
@@ -87,7 +87,7 @@ const handleSignIn = (event: Event) => {
   >
     <aside class="hidden lg:block lg:grow">
       <video
-        src="../assets/white-label.mp4"
+        src="/white-label.mp4"
         class="object-cover h-full w-full rounded-e-sm"
         autoplay
         loop
@@ -98,7 +98,7 @@ const handleSignIn = (event: Event) => {
       class="flex flex-col h-full lg:basis-1/2 place-items-center justify-around p-3"
     >
       <figure>
-        <img src="../assets/logo.svg" class="w-32" />
+        <img src="/logo.svg" class="w-32" />
       </figure>
 
       <LoginForm

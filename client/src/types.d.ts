@@ -24,3 +24,14 @@ export interface Token {
   _id: string;
   exp: number;
 }
+
+export interface File {
+  originalName: string;
+  name: string;
+  employee: string;
+  task: string;
+  status: "uploading" | "completed" | "failed";
+  assignedTo: string;
+  created_at: Date;
+  updated_at: Date;
+}

@@ -41,4 +41,6 @@ employeeSchema.pre("save", async function (next) {
 
 const Employee = model("Employee", employeeSchema);
 
+Employee.watch().on("change", data => console.log(data));
+
 export default Employee;

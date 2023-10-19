@@ -2,9 +2,15 @@ import { Schema, model } from "mongoose";
 const fileSchema = new Schema(
   {
     originalName: String,
-    fileName: String,
+    name: String,
     employee: String,
     task: String,
+    status: {
+      type: String,
+      enum: ["uploading", "completed", "failed"],
+      default: "uploading",
+    },
+    assignedTo: String,
   },
   {
     strict: true,
@@ -16,5 +22,7 @@ const fileSchema = new Schema(
 );
 
 const File = model("File", fileSchema);
+
+File.watch().on("change", data => console.log(data));
 
 export default File;

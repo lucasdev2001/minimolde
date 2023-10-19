@@ -28,25 +28,14 @@ onMounted(async () => {
   <div class="drawer sm:drawer-open">
     <input id="dashboard-drawer" type="checkbox" class="drawer-toggle" />
     <div class="drawer-content">
-      <div class="navbar bg-base- rounded-md">
-        <div class="navbar-start sm:hidden">
-          <div class="avatar">
-            <div class="rounded-full cursor-pointer hover:border-2 w-14">
-              <label for="dashboard-drawer">
-                <img :src="employee.profilePicture" />
-              </label>
-            </div>
-          </div>
-        </div>
-        <div class="navbar-start">
-          <div class="text-sm breadcrumbs hidden sm:block">
+      <div class="navbar rounded-md flex">
+        <div class="grow">
+          <div class="text-sm breadcrumbs">
             <ul>
               <template v-for="routePath in route.path.split('/')">
                 <li>
                   <label for="dashboard-drawer">
-                    <a>{{
-                      routePath.charAt(0).toUpperCase() + routePath.slice(1)
-                    }}</a>
+                    <a>{{ routePath.replace(/-/g, " ") }}</a>
                   </label>
                 </li>
               </template>
@@ -54,7 +43,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="navbar-end">
+        <div class="flex-shrink">
           <button class="btn btn-ghost btn-circle">
             <div class="indicator">
               <i class="fa-solid fa-bell text-lg"></i>
@@ -120,7 +109,7 @@ onMounted(async () => {
               <details open>
                 <summary class="p-2">
                   Manage
-                  <i class="fa-solid fa-gear ms-auto fa-lg"></i>
+                  <i class="fa-solid fa-briefcase ms-auto fa-lg"></i>
                 </summary>
                 <ul>
                   <li>
