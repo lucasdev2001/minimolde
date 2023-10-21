@@ -4,25 +4,42 @@ import { useRoute, useRouter } from "vue-router";
 import BottomNavbar from "./BottomNavbar.vue";
 
 import { employee } from "../../stores/employeeStore";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import axios from "axios";
 import jwtDecode from "jwt-decode";
-import { Token } from "../../types";
-const router = useRouter();
+import { kebabCase } from "lodash";
+import { Team, Token } from "../../types";
+import * as mqtt from "mqtt";
 
 const route = useRoute();
+const notificationsCount = ref(0);
+const router = useRouter();
+const teams = ref<Team[]>([]);
+
+const client = mqtt.connect(import.meta.env.VITE_API_BROKER);
+client.subscribe("notifications", _ => console.log(_));
+client.on("message", async _ => {
+  notificationsCount.value++;
+});
 
 onMounted(async () => {
-  console.log("mounted");
   const token = localStorage.getItem("token");
   if (token) {
     const decoded = jwtDecode(token) as Token;
     axios.get("http://localhost:3000/employees/" + decoded._id).then(res => {
-      console.log(res.data);
       employee.value = res.data;
     });
   }
+
+  const res = await axios.get(
+    import.meta.env.VITE_API_EMPLOYEE_TEAMS + employee.value._id
+  );
+  teams.value = res.data;
 });
+const logout = () => {
+  localStorage.removeItem("token");
+  router.push({ name: "Auth" });
+};
 </script>
 <template>
   <div class="drawer sm:drawer-open">
@@ -44,10 +61,23 @@ onMounted(async () => {
         </div>
 
         <div class="flex-shrink">
-          <button class="btn btn-ghost btn-circle">
+          <button
+            class="btn btn-ghost btn-circle"
+            @click="
+              () => {
+                router.push({ name: 'inbox' });
+                notificationsCount = 0;
+              }
+            "
+          >
             <div class="indicator">
               <i class="fa-solid fa-bell text-lg"></i>
-              <span class="badge badge-xs badge-primary indicator-item">1</span>
+              <span
+                class="badge badge-xs badge-primary indicator-item"
+                :class="notificationsCount > 0 && 'animate-pulse'"
+                v-if="notificationsCount > 0 && route.name !== 'inbox'"
+                >{{ notificationsCount }}</span
+              >
             </div>
           </button>
         </div>
@@ -85,6 +115,12 @@ onMounted(async () => {
               <i class="fa-solid fa-box-archive ms-auto"></i>
             </a>
           </li>
+          <li>
+            <a class="bg-base-200" @click="router.push({ name: 'inbox' })">
+              Inbox
+              <i class="fa-solid fa-inbox ms-auto"></i>
+            </a>
+          </li>
           <ul class="menu menu-xs bg-base-200 rounded-lg max-w-xs w-full">
             <li>
               <details open>
@@ -93,12 +129,23 @@ onMounted(async () => {
                   <i class="fa-solid fa-user-group ms-auto"></i>
                 </summary>
                 <ul>
-                  <li>
-                    <a class="p-2"> Team </a>
-                  </li>
-                  <li>
-                    <a class="p-2"> Team </a>
-                  </li>
+                  <template v-for="team in teams">
+                    <li>
+                      <a
+                        class="p-2"
+                        @click="
+                          router.push({
+                            name: 'teams',
+                            params: {
+                              team: kebabCase(team.name.toLocaleLowerCase()),
+                            },
+                          })
+                        "
+                      >
+                        {{ team.name }}
+                      </a>
+                    </li>
+                  </template>
                 </ul>
               </details>
             </li>
@@ -132,6 +179,12 @@ onMounted(async () => {
             </li>
           </ul>
         </div>
+        <li class="justify-self-end">
+          <a class="bg-base-200" @click="logout">
+            Logout
+            <i class="fa-solid fa-right-from-bracket ms-auto"></i>
+          </a>
+        </li>
       </ul>
     </div>
   </div>

@@ -6,7 +6,6 @@ import nodemailer from "nodemailer";
 
 import Employee from "../models/Employee";
 import { jwt, decode } from "hono/jwt";
-import jwtDecode from "jwt-decode";
 
 const auth = new Hono();
 
@@ -17,7 +16,7 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: "minimolde@minimolde.cloud",
+    user: "minimolde-bot@minimolde.cloud",
     pass: "GNT3131.b.401",
   },
 });
@@ -76,12 +75,14 @@ auth.post("/create-account", async c => {
   });
 
   if (Number(process.env.PRODUCTION)) {
-    await transporter.sendMail({
-      from: '"Minimolde bot 👻" minimolde@minimolde.cloud',
+    const validateTokenAdress = process.env.CLIENT_CONFIRM_EMAIL + token;
+
+    const response = await transporter.sendMail({
+      from: '"Minimolde bot 👻" minimolde-bot@minimolde.cloud',
       to: "lucasdev2001@gmail.com",
       subject: "Verify your minimolde account",
       text: "this link will expire in 30 minutes",
-      html: `<b>Here is your verification link</b>`,
+      html: `<a href='${validateTokenAdress}'>confirm e-mail</a>`,
     });
   }
 

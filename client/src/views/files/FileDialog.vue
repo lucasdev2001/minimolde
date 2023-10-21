@@ -3,6 +3,7 @@ import { useFileDialog } from "@vueuse/core";
 import axios from "axios";
 import { ref } from "vue";
 import { employee } from "../../stores/employeeStore";
+import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
 
 const { open, reset, onChange } = useFileDialog();
 
@@ -29,15 +30,19 @@ const handleUploadFile = async (e: Event) => {
   form.append("name", file.value?.name!);
   form.append("file", file.value!);
   form.append("assignedTo", employee.value._id);
-  console.log(employee.value._id);
 
   if (customName.value !== file.value?.name) {
     form.append("customName", customName.value);
   }
   fileDialog.value?.close();
-  emit("file:sending");
-  await axios.post(import.meta.env.VITE_API_FILES, form);
-  emit("file:sent");
+  try {
+    emit("file:sending");
+    const res = await axios.post(import.meta.env.VITE_API_FILES, form);
+    handleApiResponseMessage(res.data, true);
+    emit("file:sent");
+  } catch (error) {
+    handleApiResponseMessage((error as Error).message, false);
+  }
 };
 
 defineExpose({

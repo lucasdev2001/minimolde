@@ -1,64 +1,53 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
-import { Employee } from "../../types";
+import { computed, ref } from "vue";
+import { Employee, Team } from "../../types";
 import axios, { AxiosError } from "axios";
 import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+import AvatarGroup from "../employees/AvatarGroup.vue";
 
 //emits
 
-const emit = defineEmits(["isLoading:true", "isLoading:false"]);
+const emit = defineEmits([
+  "isLoading:true",
+  "isLoading:false",
+  "team:created",
+  "team:updated",
+]);
 
 //refs
-const employeesWithPaging = ref<{
-  employees: Employee[];
-  pages: number;
-  documentsCount: number;
-}>({
-  employees: [],
-  pages: 0,
-  documentsCount: 0,
-});
+const updatedTeam = ref<Team | null>();
+const employees = ref<Employee[]>([]);
 const createTeamForm = ref<HTMLFormElement | null>(null);
 const createTeamDialog = ref<HTMLDialogElement | null>(null);
-const checkedEmployees = ref([]);
-const query = reactive<{
-  name?: string;
-  limit: number;
-  page: number;
-}>({
-  limit: 4,
-  page: 0,
-  name: "",
-});
+const checkedEmployees = ref<string[]>([]);
+const searchInput = ref("");
+const isEditing = ref(false);
 
 //functions
-const toggleCreateTeamDialog = async () => {
+const defineEdit = (team: Team) => {
+  isEditing.value = true;
+  updatedTeam.value = team;
+  checkedEmployees.value = updatedTeam.value.employees.map(
+    employee => employee._id
+  );
+  toggleTeamDialog();
+};
+const toggleTeamDialog = async () => {
   if (createTeamDialog.value?.open) {
+    updatedTeam.value = null;
+    checkedEmployees.value = [];
     createTeamDialog.value?.close();
+    isEditing.value = false;
   } else {
     emit("isLoading:true");
-    employeesWithPaging.value = await fetchEmployeesWithQuery(
-      query.limit,
-      query.page
-    );
+    employees.value = await fetchEmployees();
     emit("isLoading:false");
     createTeamDialog.value?.showModal();
   }
 };
-const fetchEmployeesWithQuery = async (
-  limit: number,
-  page: number,
-  name: string | null = null
-) => {
-  const pageQuery = "page=" + page;
-  const limitQuery = "limit=" + limit;
-  const nameQuery = "name=" + name;
-
-  const query = [pageQuery, limitQuery];
-  if (name && name !== "") query.push(nameQuery);
-
+const fetchEmployees = async () => {
   return axios
-    .get(import.meta.env.VITE_API_EMPLOYEE + "?" + query.join("&"))
+    .get(import.meta.env.VITE_API_EMPLOYEE)
     .then(res => res.data)
     .catch(_ => []);
 };
@@ -74,12 +63,13 @@ const handleCreateTeam = async (event: Event) => {
 
   try {
     const response = await axios.post(import.meta.env.VITE_API_TEAM, team);
-    toggleCreateTeamDialog();
+    toggleTeamDialog();
     createTeamForm.value?.reset();
     checkedEmployees.value = [];
     handleApiResponseMessage(response.data, true);
+    emit("team:created");
   } catch (error) {
-    toggleCreateTeamDialog();
+    toggleTeamDialog();
     createTeamForm.value?.reset();
     checkedEmployees.value = [];
     handleApiResponseMessage(
@@ -89,48 +79,86 @@ const handleCreateTeam = async (event: Event) => {
   }
 };
 
-const handlePagination = async (pageNumber: number) => {
-  query.page = pageNumber;
-  employeesWithPaging.value = await fetchEmployeesWithQuery(
-    query.limit,
-    query.page,
-    query.name
-  );
+const handleUpdateTeam = async (event: Event) => {
+  const form = event.target as HTMLFormElement;
+  const formData = new FormData(form);
+  const formJson = Object.fromEntries(formData.entries());
+
+  const team = {
+    ...formJson,
+    employees: checkedEmployees.value,
+  };
+
+  try {
+    const response = await axios.put(
+      import.meta.env.VITE_API_TEAM + updatedTeam.value?._id,
+      team
+    );
+    toggleTeamDialog();
+    createTeamForm.value?.reset();
+    checkedEmployees.value = [];
+    handleApiResponseMessage(response.data, true);
+    emit("team:updated");
+  } catch (error) {
+    toggleTeamDialog();
+    createTeamForm.value?.reset();
+    checkedEmployees.value = [];
+    handleApiResponseMessage(
+      String((error as AxiosError).response?.data),
+      false
+    );
+  }
 };
 
-const handleSearch = async () => {
-  query.page = 0;
-  employeesWithPaging.value = await fetchEmployeesWithQuery(
-    query.limit,
-    query.page,
-    query.name
-  );
+//computations
+
+const searchedEmployees = computed(() => {
+  if (searchInput.value !== "") {
+    return employees.value.filter(employee =>
+      employee.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
+    );
+  }
+  return employees.value;
+});
+
+const handleTeam = (event: Event) => {
+  if (isEditing.value) {
+    return handleUpdateTeam(event);
+  }
+  return handleCreateTeam(event);
 };
 
 //exposes
 
 defineExpose({
-  toggleCreateTeamDialog,
+  toggleCreateTeamDialog: toggleTeamDialog,
+  editTeam: defineEdit,
 });
 </script>
 <template>
   <dialog class="modal modal-bottom sm:modal-middle" ref="createTeamDialog">
-    <div class="modal-box min-h-0 sm:min-h-0">
+    <div class="modal-box min-h-0">
       <button
         class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-        @click="toggleCreateTeamDialog"
+        @click="toggleTeamDialog"
       >
         <i class="fa-solid fa-x"></i>
       </button>
       <div>
         <h3 class="font-bold text-lg">Create a new team</h3>
+        <AvatarGroup
+          :employees="[
+            ...employees.filter(employee =>
+              checkedEmployees.includes(employee._id)
+            ),
+          ]"
+        />
       </div>
-
       <form
         ref="createTeamForm"
         method="post"
-        class="form-control gap-1"
-        @submit.prevent="handleCreateTeam"
+        class="form-control gap-3"
+        @submit.prevent="handleTeam"
       >
         <label for="name" class="label label-text">Team name</label>
         <input
@@ -141,6 +169,7 @@ defineExpose({
           class="input input-bordered input-primary w-full"
           maxlength="30"
           required
+          :value="updatedTeam?.name"
         />
 
         <label for="description" class="label label-text">
@@ -153,9 +182,10 @@ defineExpose({
           placeholder="ex: finance department of building nº 3"
           maxlength="40"
           required
+          :value="String(updatedTeam?.description ?? '')"
         ></textarea>
         <label for="search-employees" class="label label-text"
-          >Total Employees: {{ employeesWithPaging.documentsCount }}</label
+          >Total Employees: {{ employees.length }}</label
         >
         <div class="join flex">
           <input
@@ -163,31 +193,22 @@ defineExpose({
             type="text"
             placeholder="Search employees"
             class="input input-bordered input-primary w-full grow join-item"
-            v-model="query.name"
+            v-model="searchInput"
           />
           <button
             class="btn btn-neutral join-item"
             type="button"
-            v-if="query.name"
-            @click="
-              () => {
-                query.name = '';
-                handleSearch();
-              }
-            "
+            v-if="searchInput"
+            @click="searchInput = ''"
           >
-            ✕
+            <i class="fa-solid fa-x"></i>
           </button>
-          <button
-            class="btn btn-primary join-item"
-            type="button"
-            @click="handleSearch"
-          >
+          <button class="btn btn-primary join-item" type="button">
             <i class="fa-solid fa-magnifying-glass"></i>
           </button>
         </div>
 
-        <div class="flex flex-col">
+        <div class="overflow-y-auto max-h-96">
           <table class="table table-xs">
             <!-- head -->
             <thead>
@@ -198,7 +219,7 @@ defineExpose({
               </tr>
             </thead>
             <tbody>
-              <template v-for="employee in employeesWithPaging.employees">
+              <template v-for="employee in searchedEmployees">
                 <tr>
                   <th>
                     <label>
@@ -238,25 +259,18 @@ defineExpose({
               >
             </tbody>
           </table>
-          <div class="join justify-end">
-            <template v-for="(_, index) in employeesWithPaging.pages">
-              <button
-                class="join-item btn"
-                type="button"
-                @click="handlePagination(index)"
-                :class="query.page === index && 'btn-active'"
-              >
-                {{ index + 1 }}
-              </button>
-            </template>
-          </div>
         </div>
 
         <div class="modal-action">
-          <button class="btn" type="button" @click="toggleCreateTeamDialog">
-            Close
+          <button class="btn" type="button" @click="toggleTeamDialog">
+            cancel
           </button>
-          <button class="btn btn-primary" type="submit">Create</button>
+          <button class="btn btn-primary" type="submit" v-if="!isEditing">
+            Create
+          </button>
+          <button class="btn btn-primary" type="submit" v-if="isEditing">
+            Update
+          </button>
         </div>
       </form>
     </div>

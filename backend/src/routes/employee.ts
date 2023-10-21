@@ -7,32 +7,19 @@ import Employee from "../models/Employee";
 const employee = new Hono();
 
 employee.get("/", async c => {
-  const { limit, page, name } = c.req.queries();
+  const { name } = c.req.queries();
 
   const employees = await Employee.find({
     name: name ? new RegExp(String(name), "i") : /.*/g,
-  })
-    .select({
-      name: true,
-      email: true,
-      roles: true,
-      teams: true,
-      profilePicture: true,
-    })
-    .skip(Number(page) * Number(limit))
-    .limit(Number(limit));
-
-  const documentsCount = await Employee.countDocuments({
-    name: name ? new RegExp(String(name), "i") : /.*/g,
+  }).select({
+    name: true,
+    email: true,
+    roles: true,
+    teams: true,
+    profilePicture: true,
   });
 
-  const pages = Math.ceil(documentsCount / Number(limit));
-
-  return c.json({
-    documentsCount,
-    pages,
-    employees,
-  });
+  return c.json(employees);
 });
 
 employee.post("/populate", async c => {
@@ -65,6 +52,14 @@ employee.get("/:id", async c => {
     console.log((error as Error).message);
     throw new HTTPException(404, { message: "Employee not found" });
   }
+});
+
+employee.delete("/", async c => {
+  const body = await c.req.json();
+  console.log(body.employees);
+
+  await Employee.deleteMany({ _id: { $in: body.employees } });
+  return c.json("deleted succesfully", 200);
 });
 
 export default employee;

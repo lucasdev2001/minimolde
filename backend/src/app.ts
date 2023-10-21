@@ -7,6 +7,7 @@ import file from "./routes/file";
 import team from "./routes/team";
 import task from "./routes/task";
 import auth from "./routes/auth";
+import notification from "./routes/notification";
 
 const app = new Hono();
 const secret = process.env.JWT_SECRET!;
@@ -28,8 +29,9 @@ app.get("/", c => c.text("pong 🏓"));
 
 app.route("/employees/", employee);
 app.route("/teams/", team);
-app.route("/tasks", task);
+app.route("/tasks/", task);
 app.route("/auth", auth);
+app.route("/notifications/", notification);
 
 // app.use("/files", jwt({ secret }));
 app.route("/files/", file);

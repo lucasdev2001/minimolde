@@ -10,6 +10,8 @@ import ManageTeamsVue from "./views/manage/ManageTeams.vue";
 import jwtDecode from "jwt-decode";
 import { Token } from "./types";
 import { routeLoading } from "./stores/routeLoading";
+import ManageEmployeesVue from "./views/manage/ManageEmployees.vue";
+import InboxVue from "./views/inbox/Inbox.vue";
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -44,6 +46,11 @@ export const router = createRouter({
           component: FilesVue,
         },
         {
+          path: "inbox",
+          name: "inbox",
+          component: InboxVue,
+        },
+        {
           path: "teams/:team",
           name: "teams",
           component: TeamsVue,
@@ -60,7 +67,7 @@ export const router = createRouter({
             {
               path: "manage-employees",
               name: "manage-employees",
-              component: HomeVue,
+              component: ManageEmployeesVue,
             },
             {
               path: "manage-tasks",

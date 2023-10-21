@@ -23,6 +23,4 @@ const fileSchema = new Schema(
 
 const File = model("File", fileSchema);
 
-File.watch().on("change", data => console.log(data));
-
 export default File;

@@ -8,16 +8,19 @@ export interface Employee {
 }
 
 export interface Team {
+  _id?: string;
   name: string;
-  description: String;
+  description: string;
   employees: Employee[];
 }
 
 export interface Task {
+  _id?: string;
   title: string;
   description: string;
-  assignedTo: string[];
-  status: "started" | "progress" | "completed";
+  assignedTo?: string[];
+  status: "started" | "inProgress" | "completed" | "";
+  employees?: Employee[];
 }
 
 export interface Token {
@@ -34,4 +37,10 @@ export interface File {
   assignedTo: string;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface Notification {
+  content: string;
+  from: Employee;
+  created_at: Date;
 }

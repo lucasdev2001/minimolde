@@ -24,7 +24,7 @@ const employeeSchema = new Schema(
     profilePicture: String || null,
     verified: {
       type: Boolean,
-      default: process.env.DEVELOPMENT,
+      default: !process.env.PRODUCTION,
     },
   },
   { strict: true }
@@ -40,7 +40,5 @@ employeeSchema.pre("save", async function (next) {
 });
 
 const Employee = model("Employee", employeeSchema);
-
-Employee.watch().on("change", data => console.log(data));
 
 export default Employee;

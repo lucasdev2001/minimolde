@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { File as MinimoldeFile } from "../../types";
+import { Team } from "../../types";
 import axios from "axios";
 import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
 
-const emit = defineEmits([`file:deleted`]);
+//emits
+const emit = defineEmits(["team:delete"]);
 
-const fileRef = ref<MinimoldeFile>();
+const teamRef = ref<Team>();
 const deleteDialog = ref<HTMLDialogElement>();
 
 const toggleFileDialog = () => {
@@ -17,19 +18,17 @@ const toggleFileDialog = () => {
   }
 };
 
-const defineFile = (file: MinimoldeFile) => {
-  fileRef.value = file;
+const defineTeam = (file: Team) => {
+  teamRef.value = file;
   toggleFileDialog();
 };
 
 const handleDeleteFile = async () => {
-  console.log(import.meta.env.VITE_API_FILES);
-
   try {
     const res = await axios.delete(
-      import.meta.env.VITE_API_FILES + fileRef.value?.name
+      import.meta.env.VITE_API_TEAM + teamRef.value?._id
     );
-    emit(`file:deleted`);
+    emit("team:delete");
     toggleFileDialog();
     handleApiResponseMessage(res.data, true);
   } catch (error) {
@@ -38,15 +37,17 @@ const handleDeleteFile = async () => {
   }
 };
 
+//exposes
+
 defineExpose({
-  deleteFile: defineFile, // 🤫
+  deleteTeam: defineTeam, // 🤫
 });
 </script>
 <template>
   <dialog class="modal modal-middle lg:modal-middle" ref="deleteDialog">
     <div class="modal-box flex flex-col gap-3 prose">
       <form method="dialog">
-        <i class="fa-solid fa-box-archive text-lg"></i>
+        <i class="fa-solid fa-user-group ms-auto"></i>
         <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
           <i class="fa-solid fa-x"></i>
         </button>
@@ -57,15 +58,15 @@ defineExpose({
         @submit.prevent="handleDeleteFile"
       >
         <h3 class="font-bold text-lg">
-          Are you sure ? deleting:
+          Are you sure ? deleting team:
           <span class="decoration-1 underline">
-            {{ fileRef?.originalName }}
+            {{ teamRef?.name }}
           </span>
         </h3>
         <input
           type="text"
           class="input input-bordered w-full"
-          :value="fileRef?.originalName"
+          :value="teamRef?.name"
           readonly
         />
         <button class="btn btn-error" type="submit">delete</button>

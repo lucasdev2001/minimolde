@@ -45,31 +45,18 @@ file.post("/", async c => {
     console.log(error);
   }
 
-  return c.json(body, 201);
+  return c.json("Created succesfully.", 201);
 });
 
 file.get("/assigned-to/:id", async c => {
-  const { limit, page, name } = await c.req.queries();
-
   const _id = c.req.param("id");
   console.log(_id);
 
   const files = await File.find({
     assignedTo: _id,
-    name: name ? new RegExp(String(name), "i") : /.*/g,
-  })
-    .limit(Number(limit))
-    .skip(Number(page) * Number(limit));
-
-  const pages = await File.countDocuments({
-    assignedTo: _id,
-    name: name ? new RegExp(String(name), "i") : /.*/g,
   });
 
-  return c.json({
-    files,
-    pages,
-  });
+  return c.json(files);
 });
 
 file.delete("/:name", async c => {

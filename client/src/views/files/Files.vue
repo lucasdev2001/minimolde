@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import FileDialog from "./FileDialog.vue";
 import DeleteFileDialog from "./DeleteFileDialog.vue";
 import { File as MinimoldeFile } from "../../types";
@@ -8,51 +8,37 @@ import { employee } from "../../stores/employeeStore";
 const fileDialog = ref<InstanceType<typeof FileDialog>>();
 const deleteFileDialog = ref<InstanceType<typeof DeleteFileDialog>>();
 
-const filesWithPaging = ref<{
-  files: MinimoldeFile[];
-  pages: number;
-}>({
-  files: [],
-  pages: 0,
+const files = ref<MinimoldeFile[]>([]);
+const searchInput = ref("");
+const searchedFiles = computed(() => {
+  if (searchInput.value !== "") {
+    return files.value.filter(file =>
+      file.originalName
+        .toUpperCase()
+        .startsWith(searchInput.value.toUpperCase())
+    );
+  }
+  return files.value;
 });
 
-const query = reactive<{
-  name?: string;
-  limit: number;
-  page: number;
-}>({
-  limit: 4,
-  page: 0,
-  name: "",
-});
-
-const fetchFilesWithQuery = async (
-  limit: number,
-  page: number,
-  name: string | null = null
-) => {
+const fetchFiles = async () => {
   const baseAdress =
     import.meta.env.VITE_API_ASSIGNED_FILES + employee.value._id;
-  console.log(baseAdress);
-
-  const pageQuery = "page=" + page;
-  const limitQuery = "limit=" + limit;
-  const nameQuery = "name=" + name;
-
-  const query = [pageQuery, limitQuery];
-  if (name && name !== "") query.push(nameQuery);
 
   return axios
-    .get(baseAdress + "?" + query.join("&"))
+    .get(baseAdress)
     .then(res => res.data)
     .catch(_ => []);
 };
 
 onMounted(async () => {
-  const res = await fetchFilesWithQuery(query.limit, query.page);
-  filesWithPaging.value = res;
-  console.log(filesWithPaging.value.files);
+  const res = await fetchFiles();
+  files.value = res;
 });
+
+const downloadFile = (name: string) => {
+  return import.meta.env.VITE_API_FILES_DOWNLOAD + name;
+};
 </script>
 
 <template>
@@ -69,6 +55,7 @@ onMounted(async () => {
         type="text"
         placeholder="file name"
         class="input input-bordered input-primary w-full max-w-xs join-item"
+        v-model="searchInput"
       />
       <button class="btn btn-primary join-item">search</button>
     </div>
@@ -79,13 +66,12 @@ onMounted(async () => {
           <tr>
             <th>Status</th>
             <th>Name</th>
-            <th>Date</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <!-- row 1 -->
-          <template v-for="file in filesWithPaging.files">
+          <template v-for="file in searchedFiles">
             <tr class="hover:bg-base-200">
               <td>
                 <progress
@@ -108,11 +94,14 @@ onMounted(async () => {
                 ></progress>
               </td>
               <td>{{ file.originalName }}</td>
-              <td>{{ new Date(file.created_at).toLocaleDateString() }}</td>
               <td class="flex gap-3">
-                <button class="btn btn-ghost btn-xs">
+                <a
+                  :href="downloadFile(file.name)"
+                  class="btn btn-ghost btn-xs"
+                  download
+                >
                   <i class="fa-solid fa-download"></i>
-                </button>
+                </a>
 
                 <button
                   class="btn btn-ghost btn-xs"
@@ -126,21 +115,17 @@ onMounted(async () => {
         </tbody>
       </table>
     </div>
-    <div class="join">
-      <button class="join-item btn">1</button>
-    </div>
   </main>
 
   <FileDialog
     ref="fileDialog"
-    @file:sent="
-      async () => {
-        filesWithPaging = await fetchFilesWithQuery(query.limit, query.page);
-      }
-    "
+    @file:sent="async () => (files = await fetchFiles())"
   />
 
-  <DeleteFileDialog ref="deleteFileDialog" />
+  <DeleteFileDialog
+    ref="deleteFileDialog"
+    @file:deleted="async () => (files = await fetchFiles())"
+  />
 
   <!-- modals -->
 </template>

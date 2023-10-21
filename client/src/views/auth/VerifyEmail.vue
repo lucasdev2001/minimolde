@@ -47,7 +47,7 @@ const verifyAccount = async () => {
     <div class="hero-content text-center">
       <div class="max-w-md">
         <div class="flex justify-center">
-          <img src="../assets/logo.svg" class="w-40" />
+          <img src="/logo.svg" class="w-40" />
         </div>
         <br />
         <h1 class="text-3xl font-bold text-justify">

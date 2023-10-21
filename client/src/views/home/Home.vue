@@ -1,34 +1,122 @@
 <script lang="ts" setup>
-import { reactive, ref } from "vue";
-import TaskDialog from "./TaskDialog.vue";
+import { computed, onMounted, reactive, ref } from "vue";
+import TaskDialog from "../tasks/TaskDialog.vue";
+import DeleteTaskDialog from "../tasks/DeleteTaskDialog.vue";
 
+import { Task } from "../../types";
+import TaskVue from "../tasks/Task.vue";
+import axios from "axios";
+import { employee } from "../../stores/employeeStore";
+import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+//refs
 const taskDialog = ref<InstanceType<typeof TaskDialog>>();
+const deleteTaskDialog = ref<InstanceType<typeof DeleteTaskDialog>>();
+
 const isTasksViewList = ref(true);
 const query = reactive<{
-  status: string | null;
+  status: "started" | "inProgress" | "completed";
 }>({
   status: "started",
 });
+
+//functions
 const toggleIsTasksViewList = () => {
   isTasksViewList.value = !isTasksViewList.value;
-  if (!isTasksViewList) {
-    query.status = null;
+};
+
+const handleTaskStatus = async (
+  status: "started" | "inProgress" | "completed",
+  _id: string
+) => {
+  try {
+    const res = await axios.put(import.meta.env.VITE_API_TASKS + _id, {
+      status,
+    });
+    query.status = status;
+    tasks.value = await fetchTasks();
+    handleApiResponseMessage(res.data, true);
+  } catch (error) {
+    console.log(error);
+    handleApiResponseMessage((error as Error).message, false);
   }
 };
+
+const tasks = ref<Task[]>([]);
+const searchInput = ref("");
+const fetchTasks = async () => {
+  return axios
+    .get(import.meta.env.VITE_API_TASKS_ASSIGNED_TO + employee.value._id)
+    .then(res => res.data)
+    .catch(_ => []);
+};
+
+//computations
+
+const searchedTasks = computed(() => {
+  if (searchInput.value !== "") {
+    return tasks.value.filter(tasks =>
+      tasks.title.toUpperCase().startsWith(searchInput.value.toUpperCase())
+    );
+  }
+  return tasks.value;
+});
+
+const completedTasks = computed(() => {
+  return searchedTasks.value.filter(task => task.status === "completed");
+});
+
+const startedTasks = computed(() => {
+  return searchedTasks.value.filter(task => task.status === "started");
+});
+
+const inProgressTasks = computed(() => {
+  return searchedTasks.value.filter(task => task.status === "inProgress");
+});
+
+onMounted(async () => {
+  tasks.value = await fetchTasks();
+  console.log(tasks.value);
+});
 </script>
 
 <template>
-  <header>
-    <button class="btn btn-primary" @click="taskDialog?.toggleDialog()">
-      Create task
+  <header class="flex flex-row justify-between">
+    <hgroup class="prose font-thin">
+      <h1 class="font-thin m-0">Hi {{ employee.name }} 👋</h1>
+      <h2 class="font-thin m-0">Here are your tasks</h2>
+    </hgroup>
+    <button class="btn btn-primary self-end" @click="taskDialog?.createTask()">
+      create task
     </button>
   </header>
   <progress class="progress" value="100" max="100"></progress>
   <main class="flex flex-col gap-3 h-full">
-    <div class="hidden sm:flex">
+    <div class="hidden sm:flex justify-between">
       <button class="btn" @click="toggleIsTasksViewList">
         <i class="fa-solid fa-table-columns" v-if="isTasksViewList"></i>
         <i class="fa-solid fa-table-list" v-if="!isTasksViewList"></i>
+      </button>
+      <div class="join sm:self-end">
+        <input
+          type="text"
+          class="input input-bordered input-primary w-full max-w-xs join-item"
+          placeholder="Search task"
+          v-model="searchInput"
+        />
+        <button class="btn btn-primary join-item pointer-events-none">
+          search
+        </button>
+      </div>
+    </div>
+    <div class="join sm:self-end sm:hidden">
+      <input
+        type="text"
+        class="input input-bordered input-primary w-full max-w-xs join-item"
+        placeholder="Search task"
+        v-model="searchInput"
+      />
+      <button class="btn btn-primary join-item pointer-events-none">
+        search
       </button>
     </div>
 
@@ -56,44 +144,99 @@ const toggleIsTasksViewList = () => {
           completed
         </button>
       </div>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio ullam
-        voluptates in laborum tempora officia eius dolores placeat, quia est
-        nulla, eveniet reiciendis earum. Nisi quisquam veniam quia aspernatur
-        expedita.
-      </p>
+      <div class="flex flex-col gap-3">
+        <template
+          v-if="query.status === 'started'"
+          v-for="task in startedTasks"
+        >
+          <TaskVue
+            :task="task"
+            @task:edit="taskDialog?.editTask(task)"
+            @task:delete="deleteTaskDialog?.deleteTask(task)"
+            @task:status="e => handleTaskStatus(e,task._id!)"
+          />
+        </template>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <template
+          v-if="query.status === 'inProgress'"
+          v-for="task in inProgressTasks"
+        >
+          <TaskVue
+            :task="task"
+            @task:edit="taskDialog?.editTask(task)"
+            @task:delete="deleteTaskDialog?.deleteTask(task)"
+            @task:status="e => handleTaskStatus(e,task._id!)"
+          />
+        </template>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <template
+          v-if="query.status === 'completed'"
+          v-for="task in completedTasks"
+        >
+          <TaskVue
+            :task="task"
+            @task:edit="taskDialog?.editTask(task)"
+            @task:delete="deleteTaskDialog?.deleteTask(task)"
+            @task:status="e => handleTaskStatus(e,task._id!)"
+          />
+        </template>
+      </div>
     </div>
 
-    <div class="sm:flex flex-row hidden" v-if="!isTasksViewList">
-      <div class="basis-1/3 grow">
+    <div class="sm:flex flex-row hidden gap-3" v-if="!isTasksViewList">
+      <div class="basis-1/3 grow" v-if="startedTasks.length > 0">
         <button class="btn btn-success hover:btn-active">Just started</button>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo animi
-          libero necessitatibus voluptatem. Perspiciatis minima molestiae, omnis
-          nihil laborum quo recusandae voluptas dolor similique assumenda,
-          accusamus dignissimos unde nam in.
-        </p>
+        <div class="flex flex-col gap-3">
+          <template v-for="task in startedTasks">
+            <TaskVue
+              :task="task"
+              @task:edit="taskDialog?.editTask(task)"
+              @task:delete="deleteTaskDialog?.deleteTask(task)"
+              @task:status="e => handleTaskStatus(e,task._id!)"
+            />
+          </template>
+        </div>
       </div>
-      <div class="basis-1/3 grow">
+      <div class="basis-1/3 grow" v-if="inProgressTasks.length > 0">
         <button class="btn btn-warning hover:btn-active">In Progress</button>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Distinctio
-          nostrum sequi magnam dignissimos obcaecati ipsa, porro molestias,
-          dolorum excepturi sed architecto quidem tempore soluta laudantium
-          perspiciatis. Voluptas ad voluptate non.
-        </p>
+        <div class="flex flex-col gap-3">
+          <template v-for="task in inProgressTasks">
+            <TaskVue
+              :task="task"
+              @task:edit="taskDialog?.editTask(task)"
+              @task:delete="deleteTaskDialog?.deleteTask(task)"
+              @task:status="e => handleTaskStatus(e,task._id!)"
+            />
+          </template>
+        </div>
       </div>
-      <div class="basis-1/3 grow">
+      <div class="basis-1/3 grow" v-if="completedTasks.length > 0">
         <button class="btn btn-neutral hover:btn-active">Completed</button>
-        <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nulla,
-          eligendi repudiandae ratione veritatis deserunt beatae deleniti,
-          officiis nostrum perferendis dolorum et eaque aliquid provident! Odio
-          ea voluptas voluptatum consequatur beatae?
-        </p>
+        <div class="flex flex-col gap-3">
+          <template v-for="task in completedTasks">
+            <TaskVue
+              :task="task"
+              @task:edit="taskDialog?.editTask(task)"
+              @task:delete="deleteTaskDialog?.deleteTask(task)"
+              @task:status="e => handleTaskStatus(e,task._id!)"
+            />
+          </template>
+        </div>
       </div>
     </div>
   </main>
 
-  <TaskDialog ref="taskDialog" />
+  <TaskDialog
+    ref="taskDialog"
+    @task:updated="async () => (tasks = await fetchTasks())"
+    @task:created="async () => (tasks = await fetchTasks())"
+  />
+  <DeleteTaskDialog
+    ref="deleteTaskDialog"
+    @task:delete="async () => (tasks = await fetchTasks())"
+  />
 </template>

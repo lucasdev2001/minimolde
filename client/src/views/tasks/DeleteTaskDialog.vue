@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { File as MinimoldeFile } from "../../types";
+import { Task } from "../../types";
 import axios from "axios";
 import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
 
-const emit = defineEmits([`file:deleted`]);
+//emits
+const emit = defineEmits(["task:delete"]);
 
-const fileRef = ref<MinimoldeFile>();
+const taskRef = ref<Task>();
 const deleteDialog = ref<HTMLDialogElement>();
 
-const toggleFileDialog = () => {
+const toggleDialog = () => {
   if (deleteDialog.value?.open) {
     deleteDialog.value.close();
   } else {
@@ -17,36 +18,36 @@ const toggleFileDialog = () => {
   }
 };
 
-const defineFile = (file: MinimoldeFile) => {
-  fileRef.value = file;
-  toggleFileDialog();
+const defineTask = (task: Task) => {
+  taskRef.value = task;
+  toggleDialog();
 };
 
 const handleDeleteFile = async () => {
-  console.log(import.meta.env.VITE_API_FILES);
-
   try {
     const res = await axios.delete(
-      import.meta.env.VITE_API_FILES + fileRef.value?.name
+      import.meta.env.VITE_API_TASKS + taskRef.value?._id
     );
-    emit(`file:deleted`);
-    toggleFileDialog();
+    emit("task:delete");
+    toggleDialog();
     handleApiResponseMessage(res.data, true);
   } catch (error) {
-    toggleFileDialog();
+    toggleDialog();
     handleApiResponseMessage((error as Error).message, false);
   }
 };
 
+//exposes
+
 defineExpose({
-  deleteFile: defineFile, // 🤫
+  deleteTask: defineTask, // 🤫
 });
 </script>
 <template>
   <dialog class="modal modal-middle lg:modal-middle" ref="deleteDialog">
     <div class="modal-box flex flex-col gap-3 prose">
       <form method="dialog">
-        <i class="fa-solid fa-box-archive text-lg"></i>
+        <i class="fa-solid fa-check-to-slot"></i>
         <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
           <i class="fa-solid fa-x"></i>
         </button>
@@ -57,15 +58,15 @@ defineExpose({
         @submit.prevent="handleDeleteFile"
       >
         <h3 class="font-bold text-lg">
-          Are you sure ? deleting:
+          Are you sure ? deleting task:
           <span class="decoration-1 underline">
-            {{ fileRef?.originalName }}
+            {{ taskRef?.title }}
           </span>
         </h3>
         <input
           type="text"
           class="input input-bordered w-full"
-          :value="fileRef?.originalName"
+          :value="taskRef?.title"
           readonly
         />
         <button class="btn btn-error" type="submit">delete</button>
