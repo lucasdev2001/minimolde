@@ -38,6 +38,7 @@ team.get("/employee/:employee", async c => {
 
 team.get("/:name", async c => {
   const name = await c.req.param("name");
+  console.log(name);
 
   const team = await Team.findOne({ name }).populate({
     path: "employees",
@@ -48,10 +49,9 @@ team.get("/:name", async c => {
 
 team.get("/", async c => {
   const { name } = c.req.queries();
+  console.log(name);
 
-  const teams = await Team.find({
-    name: name ? new RegExp(String(name), "i") : /.*/g,
-  }).populate({
+  const teams = await Team.find({}).populate({
     path: "employees",
     select: ["name", "email", "roles", "profilePicture"],
   });

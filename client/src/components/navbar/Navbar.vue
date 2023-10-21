@@ -7,7 +7,6 @@ import { employee } from "../../stores/employeeStore";
 import { onMounted, ref } from "vue";
 import axios from "axios";
 import jwtDecode from "jwt-decode";
-import { kebabCase } from "lodash";
 import { Team, Token } from "../../types";
 import * as mqtt from "mqtt";
 
@@ -52,7 +51,7 @@ const logout = () => {
               <template v-for="routePath in route.path.split('/')">
                 <li>
                   <label for="dashboard-drawer">
-                    <a>{{ routePath.replace(/-/g, " ") }}</a>
+                    <a>{{ routePath }}</a>
                   </label>
                 </li>
               </template>
@@ -135,9 +134,10 @@ const logout = () => {
                         class="p-2"
                         @click="
                           router.push({
-                            name: 'teams',
+                            name: `teams`,
+                            path: 'teams',
                             params: {
-                              team: kebabCase(team.name.toLocaleLowerCase()),
+                              team: team.name,
                             },
                           })
                         "

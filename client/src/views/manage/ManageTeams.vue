@@ -7,7 +7,6 @@ import axios from "axios";
 import AvatarGroup from "../employees/AvatarGroup.vue";
 import DeleteTeamDialog from "./DeleteTeamDialog.vue";
 import { useRouter } from "vue-router";
-import { kebabCase } from "lodash";
 
 //lifecycles
 
@@ -109,9 +108,10 @@ const searchedTeams = computed(() => {
                   class="btn btn-ghost btn-xs"
                   @click="
                     router.push({
-                      name: 'teams',
+                      name: `teams`,
+                      path: 'teams',
                       params: {
-                        team: kebabCase(team.name.toLocaleLowerCase()),
+                        team: team.name,
                       },
                     })
                   "

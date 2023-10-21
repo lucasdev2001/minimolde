@@ -29,7 +29,6 @@ const teamSchema = new Schema(
 );
 
 teamSchema.pre("save", async function (next) {
-  this.name = startCase(this.name);
   this.employees.map(async employeeId => {
     const employee = await Employee.findById(employeeId);
     if (employee) {

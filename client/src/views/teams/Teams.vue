@@ -20,8 +20,10 @@ const team = ref<Team>({
   employees: [],
 });
 const teamName = computed(() => {
-  return (route.params.team as string).replace(/-/g, " ");
+  return route.params.team as string;
 });
+
+console.log(teamName.value, 9000);
 
 const taskDialog = ref<InstanceType<typeof TaskDialog>>();
 const deleteTaskDialog = ref<InstanceType<typeof DeleteTaskDialog>>();
@@ -87,9 +89,9 @@ const inProgressTasks = computed(() => {
 });
 
 onMounted(async () => {
-  const res = await axios.get(
-    import.meta.env.VITE_API_TEAM + startCase(teamName.value)
-  );
+  console.log(teamName.value);
+
+  const res = await axios.get(import.meta.env.VITE_API_TEAM + teamName.value);
   team.value = res.data;
 
   console.log(route.meta);
