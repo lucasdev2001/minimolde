@@ -75,7 +75,6 @@ const inProgressTasks = computed(() => {
 
 onMounted(async () => {
   tasks.value = await fetchTasks();
-  console.log(tasks.value);
 });
 </script>
 

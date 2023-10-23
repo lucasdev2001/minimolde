@@ -5,8 +5,6 @@ const props = defineProps<{
   employees: Employee[];
 }>();
 
-console.log(props.employees);
-
 const avatarDialog = ref<HTMLDialogElement | null>(null);
 const toggleAvatarDialog = () => {
   if (avatarDialog.value?.open) {

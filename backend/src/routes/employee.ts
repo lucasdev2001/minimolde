@@ -29,6 +29,7 @@ employee.post("/populate", async c => {
       password: 123,
       roles: [faker.person.jobTitle()],
       email: faker.internet.email(),
+      verified: true,
     });
     await employee.save();
   }
@@ -56,7 +57,6 @@ employee.get("/:id", async c => {
 
 employee.delete("/", async c => {
   const body = await c.req.json();
-  console.log(body.employees);
 
   await Employee.deleteMany({ _id: { $in: body.employees } });
   return c.json("deleted succesfully", 200);

@@ -80,7 +80,7 @@ const searchedTeams = computed(() => {
         search
       </button>
     </div>
-    <div class="overflow-y-auto max-h-96 pb-32">
+    <div class="overflow-y-auto pb-32">
       <table class="table table-xs">
         <!-- head -->
         <thead>
@@ -111,7 +111,7 @@ const searchedTeams = computed(() => {
                       name: `teams`,
                       path: 'teams',
                       params: {
-                        team: team.name,
+                        team: team._id,
                       },
                     })
                   "

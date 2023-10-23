@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import BottomNavbar from "./BottomNavbar.vue";
 
 import { employee } from "../../stores/employeeStore";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { Team, Token } from "../../types";
@@ -39,6 +39,15 @@ const logout = () => {
   localStorage.removeItem("token");
   router.push({ name: "Auth" });
 };
+
+const routeBreadCrumb = computed(() => {
+  const split = route.path.split("/");
+
+  console.log(router.currentRoute.value);
+
+  return route.path.split("/");
+});
+console.log(routeBreadCrumb.value);
 </script>
 <template>
   <div class="drawer sm:drawer-open">
@@ -48,13 +57,13 @@ const logout = () => {
         <div class="grow">
           <div class="text-sm breadcrumbs">
             <ul>
-              <template v-for="routePath in route.path.split('/')">
+              <!-- <template v-for="routePath in route.path.split('/')">
                 <li>
                   <label for="dashboard-drawer">
                     <a>{{ routePath }}</a>
                   </label>
                 </li>
-              </template>
+              </template> -->
             </ul>
           </div>
         </div>
@@ -135,9 +144,8 @@ const logout = () => {
                         @click="
                           router.push({
                             name: `teams`,
-                            path: 'teams',
                             params: {
-                              team: team.name,
+                              team: team._id,
                             },
                           })
                         "

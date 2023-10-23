@@ -22,8 +22,9 @@ const notificationSchema = new Schema(
 
 const Notification = model("Notification", notificationSchema);
 
-Notification.watch().on("change", data =>
-  client.publish("notifications", "notification:updated")
-);
+Notification.watch().on("change", data => {
+  console.log(data);
+  client.publish("notifications", "notification:updated");
+});
 
 export default Notification;

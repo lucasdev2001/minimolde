@@ -13,7 +13,6 @@ file.post("/", async c => {
   const file = body.file as File;
   const customName = body.customName;
   const assignedTo = body.assignedTo;
-  console.log(assignedTo);
 
   const name = new Types.ObjectId() + path.extname(file.name);
 
@@ -50,7 +49,6 @@ file.post("/", async c => {
 
 file.get("/assigned-to/:id", async c => {
   const _id = c.req.param("id");
-  console.log(_id);
 
   const files = await File.find({
     assignedTo: _id,

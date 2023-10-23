@@ -8,7 +8,7 @@ const taskSchema = new Schema(
     assignedTo: [mongoose.Schema.Types.ObjectId],
     status: {
       type: String,
-      enum: ["started", "progress", "completed"],
+      enum: ["started", "inProgress", "completed"],
       default: "started",
     },
   },

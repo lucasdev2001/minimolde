@@ -12,6 +12,7 @@ import { Token } from "./types";
 import { routeLoading } from "./stores/routeLoading";
 import ManageEmployeesVue from "./views/manage/ManageEmployees.vue";
 import InboxVue from "./views/inbox/Inbox.vue";
+import ProfileVue from "./views/profile/Profile.vue";
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -39,6 +40,11 @@ export const router = createRouter({
           path: "",
           name: "home",
           component: HomeVue,
+        },
+        {
+          path: "profile",
+          name: "profile",
+          component: ProfileVue,
         },
         {
           path: "files",

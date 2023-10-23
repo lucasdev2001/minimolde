@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import TaskDialog from "../tasks/TaskDialog.vue";
 import DeleteTaskDialog from "../tasks/DeleteTaskDialog.vue";
 
@@ -7,10 +7,8 @@ import { Task, Team } from "../../types";
 import TaskVue from "../tasks/Task.vue";
 import axios from "axios";
 import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
-import { startCase } from "lodash";
 import { useRoute } from "vue-router";
 import AvatarGroup from "../employees/AvatarGroup.vue";
-import { router } from "../../router";
 
 //refs
 const route = useRoute();
@@ -19,11 +17,6 @@ const team = ref<Team>({
   description: "",
   employees: [],
 });
-const teamName = computed(() => {
-  return route.params.team as string;
-});
-
-console.log(teamName.value, 9000);
 
 const taskDialog = ref<InstanceType<typeof TaskDialog>>();
 const deleteTaskDialog = ref<InstanceType<typeof DeleteTaskDialog>>();
@@ -60,7 +53,7 @@ const handleTaskStatus = async (
 const searchInput = ref("");
 const fetchTasks = async () => {
   return axios
-    .get(import.meta.env.VITE_API_TASKS_ASSIGNED_TO + team.value._id)
+    .get(import.meta.env.VITE_API_TASKS_ASSIGNED_TO + route.params.team)
     .then(res => res.data)
     .catch(_ => []);
 };
@@ -88,30 +81,13 @@ const inProgressTasks = computed(() => {
   return searchedTasks.value.filter(task => task.status === "inProgress");
 });
 
-onMounted(async () => {
-  console.log(teamName.value);
-
-  const res = await axios.get(import.meta.env.VITE_API_TEAM + teamName.value);
-  team.value = res.data;
-
-  console.log(route.meta);
-
-  tasks.value = await fetchTasks();
-});
-
 watch(useRoute(), async () => {
   if (route.name === "teams") {
     const res = await axios.get(
-      import.meta.env.VITE_API_TEAM + startCase(teamName.value)
+      import.meta.env.VITE_API_TEAM + route.params.team
     );
     team.value = res.data;
     tasks.value = await fetchTasks();
-
-    router.currentRoute.value.meta = {
-      team: team.value,
-    };
-
-    console.log(route.meta);
   }
 });
 </script>
