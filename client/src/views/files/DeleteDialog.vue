@@ -1,13 +1,22 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { File as MinimoldeFile } from "../../types";
+import { File as MinimoldeFile } from "../../types.js";
 import axios from "axios";
-import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+import handleResponseMessage from "../../utils/handleResponseMessage.js";
 
 const emit = defineEmits([`file:deleted`]);
 
-const fileRef = ref<MinimoldeFile>();
+const fileRef = ref<MinimoldeFile>({
+  originalName: "",
+  assignedTo: "",
+  created_at: new Date(Date.now()).getFullYear(),
+  employee: "",
+  name: "",
+  status: "uploading",
+});
 const deleteDialog = ref<HTMLDialogElement>();
+
+const isLoading = ref(false);
 
 const toggleFileDialog = () => {
   if (deleteDialog.value?.open) {
@@ -17,34 +26,40 @@ const toggleFileDialog = () => {
   }
 };
 
-const defineFile = (file: MinimoldeFile) => {
+const prepareDelete = (file: MinimoldeFile) => {
   fileRef.value = file;
   toggleFileDialog();
 };
 
 const handleDeleteFile = async () => {
-  console.log(import.meta.env.VITE_API_FILES);
+  isLoading.value = true;
 
   try {
     const res = await axios.delete(
-      import.meta.env.VITE_API_FILES + fileRef.value?.name
+      import.meta.env.VITE_API_FILES + fileRef.value?.name,
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
     );
     emit(`file:deleted`);
     toggleFileDialog();
-    handleApiResponseMessage(res.data, true);
+    handleResponseMessage(res.data, true);
   } catch (error) {
     toggleFileDialog();
-    handleApiResponseMessage((error as Error).message, false);
+    handleResponseMessage((error as Error).message, false);
   }
+  isLoading.value = false;
 };
 
 defineExpose({
-  deleteFile: defineFile, // 🤫
+  deleteFile: prepareDelete, // 🤫
 });
 </script>
 <template>
   <dialog class="modal modal-middle lg:modal-middle" ref="deleteDialog">
-    <div class="modal-box flex flex-col gap-3 prose">
+    <div class="modal-box flex flex-col gap-3">
       <form method="dialog">
         <i class="fa-solid fa-box-archive text-lg"></i>
         <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
@@ -52,7 +67,7 @@ defineExpose({
         </button>
       </form>
       <form
-        class="flex flex-col prose gap-3"
+        class="flex flex-col gap-3"
         method="post"
         @submit.prevent="handleDeleteFile"
       >
@@ -68,9 +83,14 @@ defineExpose({
           :value="fileRef?.originalName"
           readonly
         />
-        <button class="btn btn-error" type="submit">delete</button>
+        <button class="btn btn-error" type="submit" :disabled="isLoading">
+          delete
+          <span
+            class="loading loading-spinner loading-xs"
+            v-if="isLoading"
+          ></span>
+        </button>
       </form>
     </div>
   </dialog>
 </template>
-<style></style>

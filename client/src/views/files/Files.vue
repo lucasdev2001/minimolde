@@ -1,34 +1,39 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from "vue";
 import FileDialog from "./FileDialog.vue";
-import DeleteFileDialog from "./DeleteFileDialog.vue";
+import DeleteFileDialog from "./DeleteDialog.vue";
 import { File as MinimoldeFile } from "../../types";
 import axios from "axios";
 import { employee } from "../../stores/employeeStore";
 const fileDialog = ref<InstanceType<typeof FileDialog>>();
 const deleteFileDialog = ref<InstanceType<typeof DeleteFileDialog>>();
+const isLoading = ref(false);
 
 const files = ref<MinimoldeFile[]>([]);
 const searchInput = ref("");
-const searchedFiles = computed(() => {
-  if (searchInput.value !== "") {
-    return files.value.filter(file =>
-      file.originalName
-        .toUpperCase()
-        .startsWith(searchInput.value.toUpperCase())
-    );
-  }
-  return files.value;
-});
+const searchedFiles = computed(() =>
+  [...files.value].filter(file =>
+    file.originalName.toUpperCase().startsWith(searchInput.value.toUpperCase())
+  )
+);
 
 const fetchFiles = async () => {
+  isLoading.value = true;
   const baseAdress =
     import.meta.env.VITE_API_ASSIGNED_FILES + employee.value._id;
-
-  return axios
-    .get(baseAdress)
-    .then(res => res.data)
-    .catch(_ => []);
+  try {
+    const res = await axios.get(baseAdress, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+    isLoading.value = false;
+    return res.data;
+  } catch (error) {
+    isLoading.value = false;
+    console.log(error);
+    return [];
+  }
 };
 
 onMounted(async () => {
@@ -47,7 +52,7 @@ const downloadFile = (name: string) => {
       upload a file
     </button>
   </header>
-  <progress class="progress w-full" value="100"></progress>
+  <progress class="progress w-full" :value="isLoading ? '' : '100'"></progress>
 
   <main class="flex flex-col gap-3">
     <div class="join sm:self-end">
@@ -59,7 +64,7 @@ const downloadFile = (name: string) => {
       />
       <button class="btn btn-primary join-item">search</button>
     </div>
-    <div class="overflow-x-auto">
+    <div class="max-h-screen sm:overflow-clip hover:overflow">
       <table class="table table-xs sm:table-md">
         <!-- head -->
         <thead>
@@ -119,7 +124,13 @@ const downloadFile = (name: string) => {
 
   <FileDialog
     ref="fileDialog"
-    @file:sent="async () => (files = await fetchFiles())"
+    @file:sending="isLoading = true"
+    @file:sent="
+      async () => {
+        files = await fetchFiles();
+        isLoading = false;
+      }
+    "
   />
 
   <DeleteFileDialog

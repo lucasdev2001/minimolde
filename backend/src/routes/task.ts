@@ -3,22 +3,14 @@ import Task from "../models/Task";
 import { faker } from "@faker-js/faker";
 import Employee from "../models/Employee";
 import Team from "../models/Team";
+import { jwt } from "hono/jwt";
 const task = new Hono();
-
-task.delete("/:id", async c => {
-  await Task.findByIdAndDelete(c.req.param("id"));
-  return c.json("Deleted succesfully.", 200);
-});
-
-task.put("/:id", async c => {
-  const id = c.req.param("id");
-  const body = await c.req.json();
-  await Task.findByIdAndUpdate(id, body);
-  return c.json("Updated succesfully.", 201);
-});
+task.use("/*", jwt({ secret: process.env.JWT_SECRET! }));
 
 task.post("/", async c => {
   const body = await c.req.json();
+  console.log(body);
+
   await Task.create(body);
   return c.json("Created succesfully.", 201);
 });
@@ -62,19 +54,30 @@ task.post("/populate", async c => {
 });
 
 task.get("/assigned-to/:id", async c => {
-  const { title } = c.req.query();
-
   const id = c.req.param("id");
-
   const tasks = await Task.find({
     assignedTo: id,
-    title: title ? new RegExp(title, "i") : /.*/g,
   }).populate({
     path: "employees",
     select: ["name", "email", "roles", "profilePicture"],
   });
 
   return c.json(tasks);
+});
+
+task.put("/:id", async c => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  await Task.findByIdAndUpdate(id, body, {
+    strict: true,
+    strictQuery: true,
+  });
+  return c.json("Updated succesfully.", 201);
+});
+
+task.delete("/:id", async c => {
+  await Task.findByIdAndDelete(c.req.param("id"));
+  return c.json("Deleted succesfully.", 200);
 });
 
 export default task;

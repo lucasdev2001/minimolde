@@ -14,12 +14,15 @@ export interface Team {
   employees: Employee[];
 }
 
+export type TaskStatus = "started" | "inProgress" | "completed";
+
 export interface Task {
   _id?: string;
   title: string;
   description: string;
-  assignedTo?: string[];
-  status: "started" | "inProgress" | "completed" | "";
+  assignedTo: string[];
+  assignedType: "self" | "employees" | "team";
+  status: TaskStatus;
   employees?: Employee[];
 }
 
@@ -28,15 +31,16 @@ export interface Token {
   exp: number;
 }
 
+export type Status = "uploading" | "completed" | "failed";
+
 export interface File {
   originalName: string;
   name: string;
   employee: string;
-  task: string;
-  status: "uploading" | "completed" | "failed";
+  status: Status;
   assignedTo: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at?: Date | number;
+  updated_at?: Date | number;
 }
 
 export interface Notification {

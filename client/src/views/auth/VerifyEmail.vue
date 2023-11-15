@@ -4,6 +4,8 @@ import jwtDecode from "jwt-decode";
 import { useRoute } from "vue-router";
 import { Employee } from "../../types";
 import { onBeforeMount, ref } from "vue";
+import { router } from "../../router";
+import handleResponseMessage from "../../utils/handleResponseMessage";
 
 const route = useRoute();
 const token = route.params.token as string;
@@ -34,8 +36,13 @@ const verifyAccount = async () => {
   };
   try {
     isLoading.value = true;
-    await axios.get(import.meta.env.VITE_API_VERIFY_ACCOUNT, axiosConfig);
+    const res = await axios.get(
+      import.meta.env.VITE_API_VERIFY_ACCOUNT,
+      axiosConfig
+    );
     isLoading.value = false;
+    handleResponseMessage(res.data, true);
+    router.push({ name: "Auth" });
   } catch (error) {
     console.log(error);
     isLoading.value = false;

@@ -5,7 +5,7 @@ import { Notification } from "../../types";
 import axios from "axios";
 import * as mqtt from "mqtt";
 import { onBeforeRouteLeave } from "vue-router";
-import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+import handleResponseMessage from "../../utils/handleResponseMessage";
 
 const client = mqtt.connect(import.meta.env.VITE_API_BROKER);
 client.subscribe("notifications", _ => console.log(_));
@@ -13,14 +13,27 @@ client.on("message", async _ => {
   notifications.value = await fetchNotifications();
 });
 
+const isLoading = ref(false);
+
 const notifications = ref<Notification[]>([]);
-const notificationDialog = ref<HTMLDialogElement>();
+const dialog = ref<HTMLDialogElement>();
 
 const fetchNotifications = async () => {
-  return axios
-    .get(import.meta.env.VITE_API_NOTIFICATIONS)
-    .then(res => res.data)
-    .catch(_ => []);
+  isLoading.value = true;
+  try {
+    const res = await axios.get(import.meta.env.VITE_API_NOTIFICATIONS, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+    isLoading.value = false;
+
+    return res.data;
+  } catch (error) {
+    isLoading.value = false;
+    console.log(error);
+    return [];
+  }
 };
 
 const handleNotification = async () => {
@@ -28,24 +41,31 @@ const handleNotification = async () => {
     content: notificationMessage.value,
     from: employee.value._id,
   };
+  isLoading.value = true;
   try {
     const res = await axios.post(
       import.meta.env.VITE_API_NOTIFICATIONS,
-      notification
+      notification,
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
     );
     toggleDialog();
-    handleApiResponseMessage(res.data, true);
+    handleResponseMessage(res.data, true);
   } catch (error) {
     toggleDialog();
-    handleApiResponseMessage((error as Error).message, false);
+    handleResponseMessage((error as Error).message, false);
   }
+  isLoading.value = false;
 };
 
 const toggleDialog = async () => {
-  if (notificationDialog.value?.open) {
-    notificationDialog.value?.close();
+  if (dialog.value?.open) {
+    dialog.value?.close();
   } else {
-    notificationDialog.value?.showModal();
+    dialog.value?.showModal();
   }
 };
 
@@ -59,28 +79,17 @@ const notificationMessage = ref("");
 </script>
 <template>
   <header class="flex flex-row justify-between">
-    <hgroup class="prose font-thin">
-      <h1 class="font-thin m-0">Hi {{ employee.name }} 👋</h1>
-      <h2 class="font-thin m-0">Here is your inbox</h2>
+    <hgroup>
+      <h1 class="text-3xl">Hi {{ employee.name }} 👋</h1>
+      <h2>Here is your inbox</h2>
     </hgroup>
     <button class="btn btn-primary self-end" @click="toggleDialog()">
       create a message
     </button>
   </header>
-  <progress class="progress w-full" value="100"></progress>
+  <progress class="progress w-full" :value="isLoading ? '' : '100'"></progress>
 
   <main class="flex flex-col gap-3 h-full">
-    <!--    <div class="join sm:self-end">
-      <input
-        type="text"
-        class="input input-bordered input-primary w-full max-w-xs join-item"
-        placeholder="Search a message"
-      />
-      <button class="btn btn-primary join-item pointer-events-none">
-        search
-      </button>
-    </div> -->
-
     <div class="max-h-fit pb-10 overflow-y-auto">
       <template v-for="notification in notifications">
         <div
@@ -106,7 +115,7 @@ const notificationMessage = ref("");
     </div>
   </main>
 
-  <dialog class="modal modal-bottom sm:modal-middle" ref="notificationDialog">
+  <dialog class="modal modal-bottom sm:modal-middle" ref="dialog">
     <form
       method="post"
       class="modal-box form-control gap-3"
@@ -121,7 +130,13 @@ const notificationMessage = ref("");
       ></textarea>
       <div class="modal-action">
         <button class="btn" type="button" @click="toggleDialog()">Close</button>
-        <button class="btn btn-primary">send</button>
+        <button class="btn btn-primary" :disabled="isLoading">
+          send
+          <span
+            class="loading loading-spinner loading-xs"
+            v-if="isLoading"
+          ></span>
+        </button>
       </div>
     </form>
   </dialog>

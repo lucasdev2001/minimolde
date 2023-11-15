@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { employee } from "../../stores/employeeStore";
 import { Employee } from "../../types";
 import axios from "axios";
 import AvatarGroup from "../employees/AvatarGroup.vue";
-import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+import handleResponseMessage from "../../utils/handleResponseMessage";
 
 //lifecycles
 
@@ -12,35 +12,78 @@ onMounted(async () => {
   employees.value = await fetchEmployees();
 });
 const employees = ref<Employee[]>([]);
-watch(employees, () => {
-  employees.value = employees.value.filter(
-    employees => employees._id !== employee.value._id
-  );
-});
+const updateEmployee = ref<Employee>();
 
 //components refs
 
 //refs
+
+const editDialog = ref<HTMLDialogElement>();
+const roles = ref("");
+const isLoading = ref(false);
+
+const toggleEditDialog = (employee?: Employee) => {
+  if (editDialog.value?.open) {
+    editDialog.value.close();
+  } else {
+    updateEmployee.value = employee;
+    roles.value = String(updateEmployee.value?.roles);
+    editDialog.value?.showModal();
+  }
+};
+
+const handleEditEmployeeRoles = async () => {
+  isLoading.value = true;
+  try {
+    const res = await await axios.put(
+      import.meta.env.VITE_API_EMPLOYEE + updateEmployee.value?._id,
+      {
+        roles: roles.value,
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
+    );
+    isLoading.value = false;
+    handleResponseMessage(res.data, true);
+  } catch (error) {
+    isLoading.value = false;
+    handleResponseMessage((error as Error).message, false);
+  }
+  toggleDialog();
+  employees.value = await fetchEmployees();
+};
 
 const searchInput = ref("");
 
 //functions
 
 const fetchEmployees = async () => {
-  return axios
-    .get(import.meta.env.VITE_API_EMPLOYEE)
-    .then(res => res.data)
-    .catch(_ => []);
+  isLoading.value = true;
+  try {
+    const res = await axios.get(import.meta.env.VITE_API_EMPLOYEE, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+
+    const employees = res.data as Employee[];
+    isLoading.value = false;
+    return employees.filter(employees => employees._id !== employee.value._id);
+  } catch (error) {
+    console.log(error);
+    isLoading.value = false;
+    return [];
+  }
 };
 
-const searchedEmployees = computed(() => {
-  if (searchInput.value !== "") {
-    return employees.value.filter(team =>
-      team.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
-    );
-  }
-  return employees.value;
-});
+const searchedEmployees = computed(() =>
+  [...employees.value].filter(team =>
+    team.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
+  )
+);
 
 const checkedEmployees = ref<string[]>([]);
 
@@ -53,19 +96,21 @@ const toggleDialog = async () => {
 };
 
 const handleDeleteEmployee = async () => {
-  console.log(checkedEmployees.value);
   try {
     const res = await axios.delete(import.meta.env.VITE_API_EMPLOYEE, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
       data: {
         employees: checkedEmployees.value,
       },
     });
     employees.value = await fetchEmployees();
     toggleDialog();
-    handleApiResponseMessage(res.data, true);
+    handleResponseMessage(res.data, true);
   } catch (error) {
     toggleDialog();
-    handleApiResponseMessage((error as Error).message, false);
+    handleResponseMessage((error as Error).message, false);
   }
 };
 
@@ -73,9 +118,9 @@ const dialog = ref<HTMLDialogElement>();
 </script>
 <template>
   <header class="flex flex-row justify-between">
-    <hgroup class="prose font-thin">
-      <h1 class="font-thin m-0">Hi {{ employee.name }} 👋</h1>
-      <h2 class="font-thin m-0">Manage your employees</h2>
+    <hgroup>
+      <h1 class="text-3xl">Hi {{ employee.name }} 👋</h1>
+      <h2>Manage your employees</h2>
     </hgroup>
   </header>
   <progress class="progress w-full" value="100"></progress>
@@ -99,7 +144,9 @@ const dialog = ref<HTMLDialogElement>();
       </div>
     </div>
 
-    <div class="overflow-y-auto">
+    <div
+      class="max-h-screen h-screen sm:overflow-clip overflow-auto hover:overflow-auto"
+    >
       <table class="table table-xs">
         <!-- head -->
         <thead>
@@ -107,7 +154,7 @@ const dialog = ref<HTMLDialogElement>();
             <th></th>
             <th>Name</th>
             <th class="hidden lg:flex">Email</th>
-            <th>Job</th>
+            <th>roles</th>
           </tr>
         </thead>
         <tbody>
@@ -144,6 +191,12 @@ const dialog = ref<HTMLDialogElement>();
                 <template v-for="role in employee.roles">
                   <span class="badge badge-ghost badge-sm"> {{ role }} </span>
                 </template>
+                <button
+                  class="btn btn-ghost btn-xs"
+                  @click="toggleEditDialog(employee)"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
               </td>
             </tr>
           </template>
@@ -177,5 +230,21 @@ const dialog = ref<HTMLDialogElement>();
         <button class="btn btn-error btn-block" type="submit">delete</button>
       </form>
     </div>
+  </dialog>
+
+  <dialog class="modal modal-bottom sm:modal-middle" ref="editDialog">
+    <form
+      method="dialog"
+      class="modal-box flex flex-col gap-3"
+      @submit="handleEditEmployeeRoles"
+    >
+      <h3 class="font-bold text-lg">edit {{ updateEmployee?.name }} roles</h3>
+      <textarea class="textarea textarea-primary w-full" v-model="roles">
+      </textarea>
+      <div class="modal-action">
+        <button class="btn" @click.prevent="toggleEditDialog()">cancel</button>
+        <button class="btn btn-primary">save</button>
+      </div>
+    </form>
   </dialog>
 </template>

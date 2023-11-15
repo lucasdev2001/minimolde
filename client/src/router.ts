@@ -12,7 +12,7 @@ import { Token } from "./types";
 import { routeLoading } from "./stores/routeLoading";
 import ManageEmployeesVue from "./views/manage/ManageEmployees.vue";
 import InboxVue from "./views/inbox/Inbox.vue";
-import ProfileVue from "./views/profile/Profile.vue";
+import NewPasswordVue from "./views/auth/NewPassword.vue";
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -41,11 +41,7 @@ export const router = createRouter({
           name: "home",
           component: HomeVue,
         },
-        {
-          path: "profile",
-          name: "profile",
-          component: ProfileVue,
-        },
+
         {
           path: "files",
           name: "files",
@@ -116,12 +112,17 @@ export const router = createRouter({
           },
           component: VerifyEmailVue,
         },
+        {
+          path: "new-password/:token",
+          name: "new-password",
+          component: NewPasswordVue,
+        },
       ],
     },
   ],
 });
 
-router.beforeEach(to => {
+router.beforeEach((to) => {
   if (to.meta.requiresAuth !== false) {
     const token = localStorage.getItem("token");
     if (token) {
@@ -146,7 +147,7 @@ const isAuthenticated = async (token: string | null) => {
   };
   return axios
     .get(import.meta.env.VITE_API_ADDRES + "/validate-token", axiosConfig)
-    .then(res => {
+    .then((res) => {
       return res.data;
     })
     .catch(() => false);

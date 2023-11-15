@@ -3,6 +3,7 @@ import minioClient from "../microservices/minio";
 import File from "../models/File";
 import { Types } from "mongoose";
 import path from "path";
+import Employee from "../models/Employee";
 const file = new Hono();
 
 const { MINIO_DEFAULT_BUCKET } = process.env;
@@ -26,8 +27,8 @@ file.post("/", async c => {
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  const putObjectPromise = new Promise(async (resolve, reject) => {
-    minioClient.putObject(MINIO_DEFAULT_BUCKET!, name, buffer, async err => {
+  const putObjectPromise = new Promise((resolve, reject) => {
+    minioClient.putObject(MINIO_DEFAULT_BUCKET!, name, buffer, err => {
       if (err) reject(err);
       resolve(true);
     });
@@ -40,11 +41,48 @@ file.post("/", async c => {
   } catch (error) {
     newFile.status = "failed";
     newFile.save();
-
-    console.log(error);
   }
 
   return c.json("Created succesfully.", 201);
+});
+
+file.post("/profile", async c => {
+  const body = await c.req.parseBody();
+
+  const file = body.file as File;
+  const customName = body.customName;
+  const employeeId = body.employeeId;
+
+  const name = new Types.ObjectId() + path.extname(file.name);
+
+  const newFile = new File({
+    name,
+    originalName: customName ?? file.name,
+  });
+
+  await newFile.save();
+
+  await Employee.findByIdAndUpdate(employeeId, {
+    $set: {
+      profilePicture:
+        process.env.SERVER_ADRESS + "files/download/" + newFile.name,
+    },
+  });
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  try {
+    await new Promise(async (resolve, reject) => {
+      minioClient.putObject(MINIO_DEFAULT_BUCKET!, name, buffer, async err => {
+        if (err) reject(err);
+        resolve(true);
+      });
+    });
+  } catch (error) {
+    console.log(error);
+  }
+
+  return c.json("Profile picture saved succesfully.", 201);
 });
 
 file.get("/assigned-to/:id", async c => {

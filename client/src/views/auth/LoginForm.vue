@@ -10,8 +10,8 @@ const handleSubmit = (e: Event) => {
 </script>
 <template>
   <form class="flex flex-col justify-evenly gap-3" @submit="handleSubmit">
-    <hgroup class="prose text-center">
-      <h1 class="mb-0 font-thin">Hello there, Welcome!</h1>
+    <hgroup class="text-center">
+      <h1 class="text-3xl">Hello there, Welcome!</h1>
       <p>Please enter your details</p>
     </hgroup>
     <label for="email" class="label-text"
@@ -34,7 +34,7 @@ const handleSubmit = (e: Event) => {
       />
     </label>
 
-    <a class="link label-text self-end">Forgot your password ?</a>
+    <slot></slot>
 
     <button class="btn btn-primary text-white">
       <span class="loading loading-spinner" v-if="isLoading"></span>

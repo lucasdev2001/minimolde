@@ -1,20 +1,21 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Team } from "../../types";
+import { Team } from "../../types.js";
 import axios from "axios";
-import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+import handleResponseMessage from "../../utils/handleResponseMessage.js";
 
 //emits
 const emit = defineEmits(["team:delete"]);
 
 const teamRef = ref<Team>();
-const deleteDialog = ref<HTMLDialogElement>();
+const dialog = ref<HTMLDialogElement>();
+const isLoading = ref(false);
 
 const toggleFileDialog = () => {
-  if (deleteDialog.value?.open) {
-    deleteDialog.value.close();
+  if (dialog.value?.open) {
+    dialog.value.close();
   } else {
-    deleteDialog.value?.showModal();
+    dialog.value?.showModal();
   }
 };
 
@@ -23,18 +24,25 @@ const defineTeam = (file: Team) => {
   toggleFileDialog();
 };
 
-const handleDeleteFile = async () => {
+const handleDelete = async () => {
+  isLoading.value = true;
   try {
     const res = await axios.delete(
-      import.meta.env.VITE_API_TEAM + teamRef.value?._id
+      import.meta.env.VITE_API_TEAM + teamRef.value?._id,
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
     );
     emit("team:delete");
     toggleFileDialog();
-    handleApiResponseMessage(res.data, true);
+    handleResponseMessage(res.data, true);
   } catch (error) {
     toggleFileDialog();
-    handleApiResponseMessage((error as Error).message, false);
+    handleResponseMessage((error as Error).message, false);
   }
+  isLoading.value = false;
 };
 
 //exposes
@@ -44,8 +52,8 @@ defineExpose({
 });
 </script>
 <template>
-  <dialog class="modal modal-middle lg:modal-middle" ref="deleteDialog">
-    <div class="modal-box flex flex-col gap-3 prose">
+  <dialog class="modal modal-middle lg:modal-middle" ref="dialog">
+    <div class="modal-box flex flex-col gap-3">
       <form method="dialog">
         <i class="fa-solid fa-user-group ms-auto"></i>
         <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
@@ -53,9 +61,9 @@ defineExpose({
         </button>
       </form>
       <form
-        class="flex flex-col prose gap-3"
+        class="flex flex-col gap-3"
         method="post"
-        @submit.prevent="handleDeleteFile"
+        @submit.prevent="handleDelete"
       >
         <h3 class="font-bold text-lg">
           Are you sure ? deleting team:
@@ -69,7 +77,13 @@ defineExpose({
           :value="teamRef?.name"
           readonly
         />
-        <button class="btn btn-error" type="submit">delete</button>
+        <button class="btn btn-error" type="submit" :disabled="isLoading">
+          delete
+          <span
+            class="loading loading-spinner loading-xs"
+            v-if="isLoading"
+          ></span>
+        </button>
       </form>
     </div>
   </dialog>

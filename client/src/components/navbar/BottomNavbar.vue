@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 </script>
 <template>
-  <div class="btm-nav text-center btm-nav-sm z-40 sm:hidden">
+  <div class="btm-nav text-center btm-nav-sm z-40 sm:hidden mt-52">
     <button class="hover:active">
       <label for="dashboard-drawer">
         <i class="fa-solid fa-bars"></i>

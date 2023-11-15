@@ -10,8 +10,8 @@ const handleSubmit = (event: Event) => {
 </script>
 <template>
   <form class="flex flex-col gap-3" @submit="handleSubmit">
-    <hgroup class="prose text-center">
-      <h1 class="mb-0 font-thin">Hello there, Welcome!</h1>
+    <hgroup class="text-center">
+      <h1 class="text-3xl">Hello there, Welcome!</h1>
       <p>Please enter your details</p>
     </hgroup>
     <label for="name" class="label-text"

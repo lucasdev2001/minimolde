@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { Employee, Task, Team } from "../../types";
-import axios, { AxiosError } from "axios";
-import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+import axios from "axios";
+import handleResponseMessage from "../../utils/handleResponseMessage";
 import AvatarGroup from "../employees/AvatarGroup.vue";
 import { employee } from "../../stores/employeeStore";
 
@@ -15,199 +15,205 @@ const emit = defineEmits([
   "task:updated",
 ]);
 
-//refs
-const task = ref<Task>({
-  assignedTo: [],
-  description: "",
-  status: "",
+//refs and reactives
+
+interface ClientTask extends Task {
+  checkedEmployees: string[];
+  checkedTeam: string;
+}
+
+const isLoading = ref(false);
+
+const rawTask: ClientTask = {
+  //raw task state so we can reset later
   title: "",
+  description: "",
+  assignedType: "self",
+  assignedTo: [employee.value._id],
+  status: "started",
+  checkedEmployees: [],
+  checkedTeam: "",
+};
+
+const proxyTask = reactive<ClientTask>({
+  title: "",
+  description: "",
+  assignedType: "self",
+  assignedTo: [employee.value._id],
+  status: "started",
+  checkedEmployees: [],
+  checkedTeam: "",
+});
+
+//computations
+const assignedTo = computed(() => {
+  switch (proxyTask.assignedType) {
+    case "self":
+      return [employee.value._id];
+
+    case "employees":
+      return proxyTask.checkedEmployees;
+
+    case "team":
+      return [proxyTask.checkedTeam];
+
+    default:
+      return [employee.value._id];
+  }
 });
 
 const employees = ref<Employee[]>([]);
-const teams = ref<Team[]>([]);
-const createTaskForm = ref<HTMLFormElement | null>(null);
-const createTaskDialog = ref<HTMLDialogElement | null>(null);
-const checkedEmployees = ref<string[]>([]);
-const checkedTeam = ref("");
+const team = ref<Team[]>([]);
+const dialog = ref<HTMLDialogElement>();
 const searchInput = ref("");
-const isEditing = ref(false);
-const assignedToCheckBox = ref<"myself" | "employees" | "teams">();
-const assignedTo = ref<string[]>([employee.value._id]);
+const isUpadting = ref(false);
 
 //functions
-const defineEdit = (updated: Task) => {
-  isEditing.value = true;
-  task.value = updated;
-  toggleTaskDialog();
+const prepareUpdate = (task: Task) => {
+  isUpadting.value = true;
+  Object.assign(proxyTask, task);
+  proxyTask.checkedEmployees = task.assignedTo;
+  proxyTask.checkedTeam = task.assignedTo[0];
+  toggleDialog();
 };
-const toggleTaskDialog = async () => {
-  if (createTaskDialog.value?.open) {
-    checkedEmployees.value = [];
-    task.value = {
-      description: "",
-      status: "",
-      title: "",
-    };
-    if (isEditing.value) {
-      emit("task:updated");
-    }
-    createTaskDialog.value?.close();
-    isEditing.value = false;
+
+const resetTask = () => {
+  Object.assign(proxyTask, rawTask);
+};
+const toggleDialog = async () => {
+  if (dialog.value?.open) {
+    resetTask();
+    dialog.value.close();
   } else {
     emit("isLoading:true");
     employees.value = await fetchEmployees();
-    teams.value = await fetchTeams();
-
+    team.value = await fetchTeams();
     emit("isLoading:false");
-    createTaskDialog.value?.showModal();
+    dialog.value?.showModal();
   }
 };
 const fetchEmployees = async () => {
-  return axios
-    .get(import.meta.env.VITE_API_EMPLOYEE)
-    .then(res => res.data)
-    .catch(_ => []);
+  try {
+    const res = await axios(import.meta.env.VITE_API_EMPLOYEE, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
 };
 const fetchTeams = async () => {
-  return axios
-    .get(import.meta.env.VITE_API_TEAM)
-    .then(res => res.data)
-    .catch(_ => []);
-};
-const handleCreateTask = async (event: Event) => {
-  const form = event.target as HTMLFormElement;
-  const formData = new FormData(form);
-  const formJson = Object.fromEntries(formData.entries());
-
-  switch (assignedToCheckBox.value) {
-    case "myself":
-      assignedTo.value = [employee.value._id];
-      break;
-
-    case "employees":
-      assignedTo.value = checkedEmployees.value;
-      break;
-    case "teams":
-      assignedTo.value = [checkedTeam.value];
-      break;
-    default:
-      assignedTo.value = [employee.value._id];
-
-      break;
-  }
-
-  const task = {
-    ...formJson,
-    assignedTo: assignedTo.value,
-  };
-
   try {
-    const response = await axios.post(import.meta.env.VITE_API_TASKS, task);
-    toggleTaskDialog();
-    createTaskForm.value?.reset();
-    checkedEmployees.value = [];
-    handleApiResponseMessage(response.data, true);
+    const res = await axios(import.meta.env.VITE_API_TEAM, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+const handleCreateTask = async () => {
+  proxyTask.assignedTo = assignedTo.value;
+  isLoading.value = true;
+  try {
+    const res = await axios.post(import.meta.env.VITE_API_TASKS, proxyTask, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
     emit("task:created");
+    toggleDialog();
+    handleResponseMessage(res.data, true);
   } catch (error) {
-    toggleTaskDialog();
-    createTaskForm.value?.reset();
-    checkedEmployees.value = [];
-    handleApiResponseMessage(
-      String((error as AxiosError).response?.data),
-      false
-    );
+    toggleDialog();
+    handleResponseMessage(String(error), true);
   }
+  isLoading.value = false;
 };
 
-const handleUpdateTask = async (event: Event) => {
-  const form = event.target as HTMLFormElement;
-  const formData = new FormData(form);
-  const formJson = Object.fromEntries(formData.entries());
-
-  const nwTask = {
-    ...formJson,
-  };
-
+const handleUpdateTask = async () => {
+  proxyTask.assignedTo = assignedTo.value;
+  isLoading.value = true;
   try {
-    const response = await axios.put(
-      import.meta.env.VITE_API_TASKS + task.value._id,
-      nwTask
+    const res = await axios.put(
+      import.meta.env.VITE_API_TASKS + proxyTask._id,
+      proxyTask,
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
     );
-    toggleTaskDialog();
-    createTaskForm.value?.reset();
-    checkedEmployees.value = [];
-    handleApiResponseMessage(response.data, true);
     emit("task:updated");
+    toggleDialog();
+    handleResponseMessage(res.data, true);
   } catch (error) {
-    toggleTaskDialog();
-    createTaskForm.value?.reset();
-    checkedEmployees.value = [];
-    handleApiResponseMessage(
-      String((error as AxiosError).response?.data),
-      false
-    );
+    toggleDialog();
+    handleResponseMessage(String(error), true);
+  }
+  isLoading.value = false;
+};
+
+const searchedEmployees = computed(() =>
+  [...employees.value].filter(employee =>
+    employee.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
+  )
+);
+const searchedTeams = computed(() =>
+  [...team.value].filter(team =>
+    team.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
+  )
+);
+
+const handleSubmit = () => {
+  if (isUpadting.value) {
+    return handleUpdateTask();
+  } else {
+    return handleCreateTask();
   }
 };
 
-//computations
-
-const searchedEmployees = computed(() => {
-  if (searchInput.value !== "") {
-    return employees.value.filter(employee =>
-      employee.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
-    );
-  }
-  return employees.value;
+onMounted(() => {
+  dialog.value?.addEventListener("cancel", () => {
+    resetTask();
+    isUpadting.value = false;
+  });
 });
-const searchedTeams = computed(() => {
-  if (searchInput.value !== "") {
-    return teams.value.filter(team =>
-      team.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
-    );
-  }
-  return teams.value;
-});
-
-const handleTask = (event: Event) => {
-  if (isEditing.value) {
-    return handleUpdateTask(event);
-  }
-  return handleCreateTask(event);
-};
 
 //exposes
 
 defineExpose({
-  createTask: toggleTaskDialog,
-  editTask: defineEdit,
+  createTask: toggleDialog,
+  updateTask: prepareUpdate,
 });
 </script>
 <template>
-  <dialog class="modal modal-bottom sm:modal-middle" ref="createTaskDialog">
+  <dialog class="modal modal-bottom sm:modal-middle" ref="dialog">
     <div class="modal-box min-h-0 overflow-y-auto">
       <button
         class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-        @click="toggleTaskDialog"
+        @click="toggleDialog"
       >
         <i class="fa-solid fa-x"></i>
       </button>
       <div>
         <h3 class="font-bold text-lg">Create a new task</h3>
         <AvatarGroup
-          v-if="assignedToCheckBox === 'employees'"
+          v-if="proxyTask.assignedType === 'employees'"
           :employees="[
             ...employees.filter(employee =>
-              checkedEmployees.includes(employee._id)
+              proxyTask.checkedEmployees.includes(employee._id)
             ),
           ]"
         />
       </div>
-      <form
-        ref="createTaskForm"
-        method="post"
-        class="form-control gap-3"
-        @submit.prevent="handleTask"
-      >
+      <form method="post" class="form-control" @submit.prevent="handleSubmit">
         <label for="title" class="label label-text">Task title</label>
         <input
           id="title"
@@ -217,7 +223,7 @@ defineExpose({
           class="input input-bordered input-primary w-full"
           maxlength="30"
           required
-          v-model="task.title"
+          v-model="proxyTask.title"
         />
 
         <label for="description" class="label label-text">
@@ -230,137 +236,130 @@ defineExpose({
           placeholder="ex: We need to complete the merging of Johns & brothers company into BB's software"
           maxlength="90"
           required
-          v-model="task.description"
+          v-model="proxyTask.description"
         ></textarea>
 
-        <template v-if="!isEditing">
-          <div class="form-control">
-            <label class="label cursor-pointer">
-              <span class="label-text">Myself</span>
-              <input
-                type="radio"
-                name="assignedTo"
-                class="radio"
-                :value="'myself'"
-                v-model="assignedToCheckBox"
-                checked
-              />
-            </label>
-          </div>
-          <div class="form-control">
-            <label class="label cursor-pointer">
-              <span class="label-text">Employees</span>
-              <input
-                type="radio"
-                name="assignedTo"
-                class="radio"
-                :value="'employees'"
-                v-model="assignedToCheckBox"
-              />
-            </label>
-          </div>
-          <div class="form-control">
-            <label class="label cursor-pointer">
-              <span class="label-text">Team</span>
-              <input
-                type="radio"
-                name="assignedTo"
-                class="radio"
-                :value="'teams'"
-                v-model="assignedToCheckBox"
-              />
-            </label>
-          </div>
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Myself</span>
+            <input
+              type="radio"
+              name="assignedType"
+              class="radio"
+              value="self"
+              v-model="proxyTask.assignedType"
+            />
+          </label>
+        </div>
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Employees</span>
+            <input
+              type="radio"
+              class="radio"
+              name="assignedType"
+              value="employees"
+              v-model="proxyTask.assignedType"
+            />
+          </label>
+        </div>
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Team</span>
+            <input
+              type="radio"
+              name="assignedType"
+              class="radio"
+              value="team"
+              v-model="proxyTask.assignedType"
+            />
+          </label>
+        </div>
 
-          <template v-if="assignedToCheckBox === 'employees'">
-            <label for="search-employees" class="label label-text"
-              >Total Employees: {{ employees.length }}</label
-            >
-            <div class="join flex">
-              <input
-                id="search-employees"
-                type="text"
-                placeholder="Search employees"
-                class="input input-bordered input-primary w-full grow join-item"
-                v-model="searchInput"
-              />
-              <button
-                class="btn btn-neutral join-item"
-                type="button"
-                v-if="searchInput"
-                @click="searchInput = ''"
-              >
-                <i class="fa-solid fa-x"></i>
-              </button>
-              <button class="btn btn-primary join-item" type="button">
-                <i class="fa-solid fa-magnifying-glass"></i>
-              </button>
-            </div>
-
-            <div class="overflow-y-auto max-h-96">
-              <table class="table table-xs">
-                <!-- head -->
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Name</th>
-                    <th>Job</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template v-for="employee in searchedEmployees">
-                    <tr>
-                      <th>
-                        <label>
-                          <input
-                            type="checkbox"
-                            class="checkbox"
-                            name="employees"
-                            :value="employee._id"
-                            v-model="checkedEmployees"
-                          />
-                        </label>
-                      </th>
-                      <td>
-                        <div class="flex items-center space-x-3">
-                          <div class="avatar">
-                            <div class="mask mask-squircle w-12 h-12">
-                              <img
-                                :src="employee.profilePicture"
-                                alt="Avatar Tailwind CSS Component"
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <div class="font-bold">{{ employee.name }}</div>
-                            <div class="text-sm opacity-50 truncate"></div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="badge badge-ghost badge-sm">
-                          <template v-for="role in employee.roles">
-                            {{ role }}
-                          </template>
-                        </span>
-                      </td>
-                    </tr></template
-                  >
-                </tbody>
-              </table>
-            </div>
-          </template>
-        </template>
-
-        <template v-if="assignedToCheckBox === 'teams'">
-          <label for="search-teams" class="label label-text"
-            >Total teams: {{ teams.length }}</label
+        <template v-if="proxyTask.assignedType === 'employees'">
+          <label for="search-employees" class="label label-text"
+            >Total Employees: {{ employees.length }}</label
           >
           <div class="join flex">
             <input
-              id="search-teams"
+              id="search-employees"
               type="text"
-              placeholder="Search teams"
+              placeholder="Search employees"
+              class="input input-bordered input-primary w-full grow join-item"
+              v-model="searchInput"
+            />
+            <button
+              class="btn btn-neutral join-item"
+              type="button"
+              v-if="searchInput"
+              @click="searchInput = ''"
+            >
+              <i class="fa-solid fa-x"></i>
+            </button>
+            <button class="btn btn-primary join-item" type="button">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+          </div>
+
+          <div class="overflow-y-auto max-h-96">
+            <table class="table table-xs">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Name</th>
+                  <th>Roles</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="employee in searchedEmployees">
+                  <tr>
+                    <th>
+                      <label>
+                        <input
+                          type="checkbox"
+                          class="checkbox"
+                          name="employees"
+                          :value="employee._id"
+                          v-model="proxyTask.checkedEmployees"
+                        />
+                      </label>
+                    </th>
+                    <td>
+                      <div class="flex items-center space-x-3">
+                        <div class="avatar">
+                          <div class="mask mask-squircle w-12 h-12">
+                            <img :src="employee.profilePicture" />
+                          </div>
+                        </div>
+                        <div>
+                          <div class="font-bold">{{ employee.name }}</div>
+                          <div class="text-sm opacity-50 truncate"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge badge-ghost badge-sm">
+                        <template v-for="role in employee.roles">
+                          {{ role }}
+                        </template>
+                      </span>
+                    </td>
+                  </tr></template
+                >
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <template v-if="proxyTask.assignedType === 'team'">
+          <label for="search-team" class="label label-text"
+            >Total team: {{ team.length }}</label
+          >
+          <div class="join flex">
+            <input
+              id="search-team"
+              type="text"
+              placeholder="Search team"
               class="input input-bordered input-primary w-full grow join-item"
               v-model="searchInput"
             />
@@ -397,7 +396,10 @@ defineExpose({
                           class="radio radio-primary"
                           name="team"
                           :value="team._id"
-                          v-model="checkedTeam"
+                          :checked="
+                            proxyTask.assignedTo.includes(team._id ?? '')
+                          "
+                          v-model="proxyTask.checkedTeam"
                         />
                       </label>
                     </th>
@@ -419,18 +421,35 @@ defineExpose({
           </div>
         </template>
         <div class="modal-action">
-          <button class="btn" type="button" @click="toggleTaskDialog">
+          <button class="btn" type="button" @click="toggleDialog">
             cancel
           </button>
-          <button class="btn btn-primary" type="submit" v-if="!isEditing">
+          <button
+            class="btn btn-primary"
+            type="submit"
+            v-if="!isUpadting"
+            :disabled="isLoading"
+          >
             Create
+            <span
+              class="loading loading-spinner loading-xs"
+              v-if="isLoading"
+            ></span>
           </button>
-          <button class="btn btn-primary" type="submit" v-if="isEditing">
+          <button
+            class="btn btn-primary"
+            type="submit"
+            v-if="isUpadting"
+            :disabled="isLoading"
+          >
             Update
+            <span
+              class="loading loading-spinner loading-xs"
+              v-if="isLoading"
+            ></span>
           </button>
         </div>
       </form>
     </div>
   </dialog>
 </template>
-<style></style>

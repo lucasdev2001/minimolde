@@ -5,6 +5,8 @@ import SignupForm from "./SignupForm.vue";
 import axios, { AxiosError } from "axios";
 import Toast from "../../components/Toast.vue";
 import { useRouter } from "vue-router";
+import RequestPassword from "./RequestPassword.vue";
+import handleResponseMessage from "../../utils/handleResponseMessage";
 
 //refs
 const isNwEmployee = ref(false);
@@ -12,6 +14,7 @@ const errorMessage = ref<string | null>("");
 const nwEmployeeDialog = ref<HTMLDialogElement>();
 const router = useRouter();
 const isLoading = ref(false);
+const authView = ref<"login" | "signup" | "reset-password">("login");
 
 //consts
 const isNwEmployeeDialogOpen = ref(false);
@@ -66,7 +69,7 @@ const handleSignIn = (event: Event) => {
   isLoading.value = true;
 
   axios
-    .post("http://localhost:3000/auth", formJson)
+    .post(import.meta.env.VITE_API_AUTH, formJson)
     .then(response => {
       localStorage.setItem("token", response.data);
       isLoading.value = false;
@@ -77,6 +80,22 @@ const handleSignIn = (event: Event) => {
       isLoading.value = false;
       handleErrorMessage((error.response?.data as string) ?? error.message);
     });
+};
+
+const handleRequestPassword = async (email: string) => {
+  isLoading.value = true;
+  try {
+    const res = await axios.post(import.meta.env.VITE_REQUEST_RESET_PASSWORD, {
+      email: email,
+    });
+    console.log(res.data);
+
+    handleResponseMessage(res.data, true);
+    authView.value = "login";
+  } catch (error) {
+    handleResponseMessage(String((error as AxiosError).response?.data), false);
+  }
+  isLoading.value = false;
 };
 </script>
 
@@ -102,23 +121,38 @@ const handleSignIn = (event: Event) => {
       </figure>
 
       <LoginForm
-        v-if="!isNwEmployee"
+        v-if="authView === 'login'"
         @submit="handleSignIn"
         :is-loading="isLoading"
-      />
+      >
+        <a class="link label-text self-end" @click="authView = 'reset-password'"
+          >Forgot your password ?</a
+        >
+      </LoginForm>
       <SignupForm
-        v-if="isNwEmployee"
+        v-if="authView === 'signup'"
         @submit="handleSignUp"
         :is-loading="isLoading"
       />
 
-      <p class="self-center label-text" v-if="!isNwEmployee">
+      <RequestPassword
+        v-if="authView === 'reset-password'"
+        :is-loading="isLoading"
+        @submit="handleRequestPassword"
+      >
+        <p class="self-center label-text">
+          All set ?
+          <a class="link" href="#" @click="authView = 'login'">Sign in</a>
+        </p>
+      </RequestPassword>
+
+      <p class="self-center label-text" v-if="authView === 'login'">
         Don't have an account yet ?
-        <a class="link" href="#" @click="toggleForm()">Sign up</a>
+        <a class="link" href="#" @click="authView = 'signup'">Sign up</a>
       </p>
-      <p class="self-center label-text" v-if="isNwEmployee">
+      <p class="self-center label-text" v-if="authView === 'signup'">
         Already have an account ?
-        <a class="link" href="#" @click="toggleForm()">Sign in</a>
+        <a class="link" href="#" @click="authView = 'login'">Sign in</a>
       </p>
     </article>
 

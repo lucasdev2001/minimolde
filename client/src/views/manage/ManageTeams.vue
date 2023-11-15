@@ -5,17 +5,8 @@ import { employee } from "../../stores/employeeStore";
 import { Team } from "../../types";
 import axios from "axios";
 import AvatarGroup from "../employees/AvatarGroup.vue";
-import DeleteTeamDialog from "./DeleteTeamDialog.vue";
+import DeleteTeamDialog from "./DeleteDialog.vue";
 import { useRouter } from "vue-router";
-
-//lifecycles
-
-onMounted(async () => {
-  isLoading.value = true;
-  teams.value = await fetchTeamsWithQuery();
-
-  isLoading.value = false;
-});
 
 //components refs
 const teamDialog = ref<InstanceType<typeof TeamDialog>>();
@@ -32,32 +23,44 @@ const router = useRouter();
 
 //functions
 
-const fetchTeamsWithQuery = async (name: string | null = null) => {
-  const nameQuery = "name=" + name;
+const fetchTeams = async () => {
+  isLoading.value = true;
+  try {
+    const res = await axios.get(import.meta.env.VITE_API_TEAM, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+    isLoading.value = false;
+    return res.data;
+  } catch (error) {
+    isLoading.value = false;
 
-  const query = [];
-  if (name && name !== "") query.push(nameQuery);
-
-  return axios
-    .get(import.meta.env.VITE_API_TEAM)
-    .then(res => res.data)
-    .catch(_ => []);
+    console.log(error);
+    return [];
+  }
 };
 
-const searchedTeams = computed(() => {
-  if (searchInput.value !== "") {
-    return teams.value.filter(team =>
-      team.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
-    );
-  }
-  return teams.value;
+const searchedTeams = computed(() =>
+  teams.value.filter(team =>
+    team.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
+  )
+);
+
+//lifecycles
+
+onMounted(async () => {
+  isLoading.value = true;
+  teams.value = await fetchTeams();
+
+  isLoading.value = false;
 });
 </script>
 <template>
   <header class="flex flex-row justify-between">
-    <hgroup class="prose font-thin">
-      <h1 class="font-thin m-0">Hi {{ employee.name }} 👋</h1>
-      <h2 class="font-thin m-0">Manage your teams</h2>
+    <hgroup>
+      <h1 class="text-3xl">Hi {{ employee.name }} 👋</h1>
+      <h2>Manage your teams</h2>
     </hgroup>
     <button
       class="btn btn-primary self-end"
@@ -80,7 +83,7 @@ const searchedTeams = computed(() => {
         search
       </button>
     </div>
-    <div class="overflow-y-auto pb-32">
+    <div class="pb-32 sm:overflow-clip hover:overflow-auto max-h-screen">
       <table class="table table-xs">
         <!-- head -->
         <thead>
@@ -108,10 +111,9 @@ const searchedTeams = computed(() => {
                   class="btn btn-ghost btn-xs"
                   @click="
                     router.push({
-                      name: `teams`,
-                      path: 'teams',
+                      name: 'teams',
                       params: {
-                        team: team._id,
+                        team: team.name,
                       },
                     })
                   "
@@ -121,7 +123,7 @@ const searchedTeams = computed(() => {
 
                 <button
                   class="btn btn-ghost btn-xs"
-                  @click="teamDialog?.editTeam(team)"
+                  @click="teamDialog?.updateTeam(team)"
                 >
                   <i class="fa-solid fa-pen-to-square fa-lg"></i>
                 </button>
@@ -142,12 +144,12 @@ const searchedTeams = computed(() => {
   <TeamDialog
     @is-loading:true="isLoading = true"
     @is-loading:false="isLoading = false"
-    @team:created="async () => (teams = await fetchTeamsWithQuery())"
-    @team:updated="async () => (teams = await fetchTeamsWithQuery())"
+    @team:created="async () => (teams = await fetchTeams())"
+    @team:updated="async () => (teams = await fetchTeams())"
     ref="teamDialog"
   />
   <DeleteTeamDialog
     ref="deleteTeamDialog"
-    @team:delete="async () => (teams = await fetchTeamsWithQuery())"
+    @team:delete="async () => (teams = await fetchTeams())"
   />
 </template>

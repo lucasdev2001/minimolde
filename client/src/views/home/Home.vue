@@ -1,20 +1,21 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import TaskDialog from "../tasks/TaskDialog.vue";
-import DeleteTaskDialog from "../tasks/DeleteTaskDialog.vue";
+import DeleteDialog from "../tasks/DeleteDialog.vue";
 
-import { Task } from "../../types";
+import { Task, TaskStatus } from "../../types";
 import TaskVue from "../tasks/Task.vue";
 import axios from "axios";
 import { employee } from "../../stores/employeeStore";
-import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+import handleApiResponseMessage from "../../utils/handleResponseMessage";
 //refs
 const taskDialog = ref<InstanceType<typeof TaskDialog>>();
-const deleteTaskDialog = ref<InstanceType<typeof DeleteTaskDialog>>();
+const deleteDialog = ref<InstanceType<typeof DeleteDialog>>();
+const isLoading = ref(false);
 
 const isTasksViewList = ref(true);
 const query = reactive<{
-  status: "started" | "inProgress" | "completed";
+  status: TaskStatus;
 }>({
   status: "started",
 });
@@ -24,14 +25,20 @@ const toggleIsTasksViewList = () => {
   isTasksViewList.value = !isTasksViewList.value;
 };
 
-const handleTaskStatus = async (
-  status: "started" | "inProgress" | "completed",
-  _id: string
-) => {
+const handleTaskStatus = async (status: TaskStatus, _id: string) => {
+  isLoading.value = true;
   try {
-    const res = await axios.put(import.meta.env.VITE_API_TASKS + _id, {
-      status,
-    });
+    const res = await axios.put(
+      import.meta.env.VITE_API_TASKS + _id,
+      {
+        status,
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
+    );
     query.status = status;
     tasks.value = await fetchTasks();
     handleApiResponseMessage(res.data, true);
@@ -39,38 +46,49 @@ const handleTaskStatus = async (
     console.log(error);
     handleApiResponseMessage((error as Error).message, false);
   }
+  isLoading.value = false;
 };
 
 const tasks = ref<Task[]>([]);
 const searchInput = ref("");
 const fetchTasks = async () => {
-  return axios
-    .get(import.meta.env.VITE_API_TASKS_ASSIGNED_TO + employee.value._id)
-    .then(res => res.data)
-    .catch(_ => []);
+  isLoading.value = true;
+  try {
+    const res = await axios(
+      import.meta.env.VITE_API_TASKS_ASSIGNED_TO + employee.value._id,
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
+    );
+    isLoading.value = false;
+    return res.data;
+  } catch (error) {
+    isLoading.value = false;
+    console.log(error);
+    return [];
+  }
 };
 
 //computations
 
-const searchedTasks = computed(() => {
-  if (searchInput.value !== "") {
-    return tasks.value.filter(tasks =>
-      tasks.title.toUpperCase().startsWith(searchInput.value.toUpperCase())
-    );
-  }
-  return tasks.value;
+const searchedTasks = computed(_ =>
+  [...tasks.value].filter(tasks =>
+    tasks.title.toUpperCase().startsWith(searchInput.value.toUpperCase())
+  )
+);
+
+const completedTasks = computed(_ => {
+  return [...searchedTasks.value].filter(task => task.status === "completed");
 });
 
-const completedTasks = computed(() => {
-  return searchedTasks.value.filter(task => task.status === "completed");
+const startedTasks = computed(_ => {
+  return [...searchedTasks.value].filter(task => task.status === "started");
 });
 
-const startedTasks = computed(() => {
-  return searchedTasks.value.filter(task => task.status === "started");
-});
-
-const inProgressTasks = computed(() => {
-  return searchedTasks.value.filter(task => task.status === "inProgress");
+const inProgressTasks = computed(_ => {
+  return [...searchedTasks.value].filter(task => task.status === "inProgress");
 });
 
 onMounted(async () => {
@@ -80,15 +98,19 @@ onMounted(async () => {
 
 <template>
   <header class="flex flex-row justify-between">
-    <hgroup class="prose font-thin">
-      <h1 class="font-thin m-0">Hi {{ employee.name }} 👋</h1>
-      <h2 class="font-thin m-0">Here are your tasks</h2>
+    <hgroup>
+      <h1 class="text-3xl">Hi {{ employee.name }} 👋</h1>
+      <h2>Here are your tasks</h2>
     </hgroup>
     <button class="btn btn-primary self-end" @click="taskDialog?.createTask()">
       create task
     </button>
   </header>
-  <progress class="progress" value="100" max="100"></progress>
+  <progress
+    class="progress"
+    :value="isLoading ? '' : '100'"
+    max="100"
+  ></progress>
   <main class="flex flex-col gap-3 h-full">
     <div class="hidden sm:flex justify-between">
       <button class="btn" @click="toggleIsTasksViewList">
@@ -143,43 +165,43 @@ onMounted(async () => {
           completed
         </button>
       </div>
-      <div class="flex flex-col gap-3">
-        <template
-          v-if="query.status === 'started'"
-          v-for="task in startedTasks"
-        >
+      <div
+        class="flex flex-col gap-3 max-h-screen sm:overflow-clip hover:overflow-auto p-3 sm:h-screen overflow-auto"
+        v-if="query.status === 'started'"
+      >
+        <template v-for="task in startedTasks">
           <TaskVue
             :task="task"
-            @task:edit="taskDialog?.editTask(task)"
-            @task:delete="deleteTaskDialog?.deleteTask(task)"
+            @task:edit="taskDialog?.updateTask(task)"
+            @task:delete="deleteDialog?.deleteTask(task)"
             @task:status="e => handleTaskStatus(e,task._id!)"
           />
         </template>
       </div>
 
-      <div class="flex flex-col gap-3">
-        <template
-          v-if="query.status === 'inProgress'"
-          v-for="task in inProgressTasks"
-        >
+      <div
+        class="flex flex-col gap-3 max-h-screen sm:overflow-clip hover:overflow-auto p-3 sm:h-screen overflow-auto"
+        v-if="query.status === 'inProgress'"
+      >
+        <template v-for="task in inProgressTasks">
           <TaskVue
             :task="task"
-            @task:edit="taskDialog?.editTask(task)"
-            @task:delete="deleteTaskDialog?.deleteTask(task)"
+            @task:edit="taskDialog?.updateTask(task)"
+            @task:delete="deleteDialog?.deleteTask(task)"
             @task:status="e => handleTaskStatus(e,task._id!)"
           />
         </template>
       </div>
 
-      <div class="flex flex-col gap-3">
-        <template
-          v-if="query.status === 'completed'"
-          v-for="task in completedTasks"
-        >
+      <div
+        class="flex flex-col gap-3 max-h-screen sm:overflow-clip hover:overflow-auto p-3 sm:h-screen overflow-auto"
+        v-if="query.status === 'completed'"
+      >
+        <template v-for="task in completedTasks">
           <TaskVue
             :task="task"
-            @task:edit="taskDialog?.editTask(task)"
-            @task:delete="deleteTaskDialog?.deleteTask(task)"
+            @task:edit="taskDialog?.updateTask(task)"
+            @task:delete="deleteDialog?.deleteTask(task)"
             @task:status="e => handleTaskStatus(e,task._id!)"
           />
         </template>
@@ -189,12 +211,14 @@ onMounted(async () => {
     <div class="sm:flex flex-row hidden gap-3" v-if="!isTasksViewList">
       <div class="basis-1/3 grow" v-if="startedTasks.length > 0">
         <button class="btn btn-success hover:btn-active">Just started</button>
-        <div class="flex flex-col gap-3">
+        <div
+          class="flex flex-col gap-3 max-h-screen sm:overflow-clip hover:overflow-auto p-3 h-screen"
+        >
           <template v-for="task in startedTasks">
             <TaskVue
               :task="task"
-              @task:edit="taskDialog?.editTask(task)"
-              @task:delete="deleteTaskDialog?.deleteTask(task)"
+              @task:edit="taskDialog?.updateTask(task)"
+              @task:delete="deleteDialog?.deleteTask(task)"
               @task:status="e => handleTaskStatus(e,task._id!)"
             />
           </template>
@@ -202,25 +226,30 @@ onMounted(async () => {
       </div>
       <div class="basis-1/3 grow" v-if="inProgressTasks.length > 0">
         <button class="btn btn-warning hover:btn-active">In Progress</button>
-        <div class="flex flex-col gap-3">
+        <div
+          class="flex flex-col gap-3 max-h-screen sm:overflow-clip hover:overflow-auto p-3 h-screen"
+        >
           <template v-for="task in inProgressTasks">
             <TaskVue
               :task="task"
-              @task:edit="taskDialog?.editTask(task)"
-              @task:delete="deleteTaskDialog?.deleteTask(task)"
+              @task:edit="taskDialog?.updateTask(task)"
+              @task:delete="deleteDialog?.deleteTask(task)"
               @task:status="e => handleTaskStatus(e,task._id!)"
             />
           </template>
         </div>
       </div>
-      <div class="basis-1/3 grow" v-if="completedTasks.length > 0">
+      <div
+        class="basis-1/3 grow max-h-screen sm:overflow-clip hover:overflow-auto p-3 h-screen"
+        v-if="completedTasks.length > 0"
+      >
         <button class="btn btn-neutral hover:btn-active">Completed</button>
         <div class="flex flex-col gap-3">
           <template v-for="task in completedTasks">
             <TaskVue
               :task="task"
-              @task:edit="taskDialog?.editTask(task)"
-              @task:delete="deleteTaskDialog?.deleteTask(task)"
+              @task:edit="taskDialog?.updateTask(task)"
+              @task:delete="deleteDialog?.deleteTask(task)"
               @task:status="e => handleTaskStatus(e,task._id!)"
             />
           </template>
@@ -231,11 +260,13 @@ onMounted(async () => {
 
   <TaskDialog
     ref="taskDialog"
+    @is-loading:true="isLoading = true"
+    @is-loading:false="isLoading = false"
     @task:updated="async () => (tasks = await fetchTasks())"
     @task:created="async () => (tasks = await fetchTasks())"
   />
-  <DeleteTaskDialog
-    ref="deleteTaskDialog"
+  <DeleteDialog
+    ref="deleteDialog"
     @task:delete="async () => (tasks = await fetchTasks())"
   />
 </template>

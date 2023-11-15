@@ -3,16 +3,19 @@ import { useFileDialog } from "@vueuse/core";
 import axios from "axios";
 import { ref } from "vue";
 import { employee } from "../../stores/employeeStore";
-import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+import handleResponseMessage from "../../utils/handleResponseMessage";
 
-const { open, reset, onChange } = useFileDialog();
+const { open, reset, onChange } = useFileDialog({
+  reset: true,
+  multiple: false,
+});
 
 //emits
-
 const emit = defineEmits(["file:sending", "file:sent"]);
 
 //events
-const fileDialog = ref<HTMLDialogElement | null>(null);
+const dialog = ref<HTMLDialogElement | null>(null);
+const isLoading = ref(false);
 const file = ref<File | null>();
 const customName = ref("");
 
@@ -20,7 +23,7 @@ const customName = ref("");
 onChange(files => {
   file.value = files?.item(0);
   customName.value = file.value?.name ?? "";
-  fileDialog.value?.showModal();
+  dialog.value?.showModal();
 });
 
 const handleUploadFile = async (e: Event) => {
@@ -34,15 +37,21 @@ const handleUploadFile = async (e: Event) => {
   if (customName.value !== file.value?.name) {
     form.append("customName", customName.value);
   }
-  fileDialog.value?.close();
   try {
+    isLoading.value = true;
     emit("file:sending");
-    const res = await axios.post(import.meta.env.VITE_API_FILES, form);
-    handleApiResponseMessage(res.data, true);
+    const res = await axios.post(import.meta.env.VITE_API_FILES, form, {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+    handleResponseMessage(res.data, true);
     emit("file:sent");
   } catch (error) {
-    handleApiResponseMessage((error as Error).message, false);
+    handleResponseMessage((error as Error).message, false);
   }
+  dialog.value?.close();
+  isLoading.value = false;
 };
 
 defineExpose({
@@ -50,8 +59,8 @@ defineExpose({
 });
 </script>
 <template>
-  <dialog class="modal modal-bottom lg:modal-middle" ref="fileDialog">
-    <div class="modal-box flex flex-col gap-3 prose">
+  <dialog class="modal modal-bottom lg:modal-middle" ref="dialog">
+    <div class="modal-box flex flex-col gap-3">
       <form method="dialog">
         <i class="fa-solid fa-box-archive text-lg"></i>
         <button
@@ -61,10 +70,7 @@ defineExpose({
           <i class="fa-solid fa-x"></i>
         </button>
       </form>
-      <form
-        @submit.prevent="handleUploadFile"
-        class="flex flex-col prose gap-3"
-      >
+      <form @submit.prevent="handleUploadFile" class="flex flex-col gap-3">
         <h3 class="font-bold text-lg">
           Are you sure ? uploading:
           <span class="decoration-1 underline">
@@ -77,9 +83,14 @@ defineExpose({
           name="customName"
           v-model="customName"
         />
-        <button class="btn btn-neutral">confirm</button>
+        <button class="btn btn-neutral" :disabled="isLoading">
+          confirm
+          <span
+            class="loading loading-spinner loading-xs"
+            v-if="isLoading"
+          ></span>
+        </button>
       </form>
     </div>
   </dialog>
 </template>
-<style></style>

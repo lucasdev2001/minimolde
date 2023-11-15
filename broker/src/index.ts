@@ -1,5 +1,9 @@
+import * as dotenv from "dotenv";
 import Aedes from "aedes";
 import { createServer } from "aedes-server-factory";
+import path from "node:path";
+
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 const port = 1883;
 const wsPort = 8888;

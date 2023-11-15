@@ -3,8 +3,12 @@ import { HTTPException } from "hono/http-exception";
 import { faker } from "@faker-js/faker";
 
 import Employee from "../models/Employee";
+import { isEmpty, lowerCase, replace } from "lodash";
+import { jwt } from "hono/jwt";
 
 const employee = new Hono();
+
+employee.use("/*", jwt({ secret: process.env.JWT_SECRET! }));
 
 employee.get("/", async c => {
   const { name } = c.req.queries();
@@ -53,6 +57,28 @@ employee.get("/:id", async c => {
     console.log((error as Error).message);
     throw new HTTPException(404, { message: "Employee not found" });
   }
+});
+
+employee.put("/:id", async c => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+
+  let roles: string | string[] = body.roles as string;
+
+  const employee = await Employee.findById(id);
+  if (!employee)
+    throw new HTTPException(404, { message: "Employee not found" });
+
+  roles = roles.split(",");
+  roles = roles.filter(role => !isEmpty(role));
+  roles.map(role => role.replace(/\s/g, ""));
+  roles = [...new Set(roles)];
+
+  roles = roles.map(role => lowerCase(role!));
+  employee.roles = roles;
+  await employee.save();
+
+  return c.json("updated", 200);
 });
 
 employee.delete("/", async c => {

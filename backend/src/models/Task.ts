@@ -1,6 +1,4 @@
 import mongoose, { Schema, model } from "mongoose";
-import Employee from "./Employee";
-import Team from "./Team";
 const taskSchema = new Schema(
   {
     title: String,
@@ -10,6 +8,10 @@ const taskSchema = new Schema(
       type: String,
       enum: ["started", "inProgress", "completed"],
       default: "started",
+    },
+    assignedType: {
+      type: String,
+      enum: ["self", "employees", "team"],
     },
   },
   {

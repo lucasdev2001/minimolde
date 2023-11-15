@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, ref } from "vue";
 import { Employee, Team } from "../../types";
 import axios, { AxiosError } from "axios";
 import handleResponseMessage from "../../utils/handleResponseMessage";
-import AvatarGroup from "../employees/AvatarGroup.vue";
 
 //emits
 
@@ -15,104 +14,85 @@ const emit = defineEmits([
 ]);
 
 //refs
+const updatedTeam = ref<Team | null>();
 const employees = ref<Employee[]>([]);
-const dialog = ref<HTMLDialogElement | null>(null);
-const isLoading = ref(false);
-
-interface ClientTeam extends Omit<Team, "employees"> {
-  employees: Employee[] | string[];
-}
-
-const rawTeam: Team = {
-  //keeping a raw state so we can reset proxy later
-  name: "",
-  description: "",
-  employees: [],
-};
-
+const createTeamForm = ref<HTMLFormElement | null>(null);
+const createTeamDialog = ref<HTMLDialogElement | null>(null);
 const checkedEmployees = ref<string[]>([]);
-
-const proxyTeam = reactive<ClientTeam>({
-  name: "",
-  description: "",
-  employees: [],
-});
-
 const searchInput = ref("");
-const isUpdating = ref(false);
+const isEditing = ref(false);
 
 //functions
-const prepareUpdate = (team: Team) => {
-  isUpdating.value = true;
-  Object.assign(proxyTeam, team);
-  checkedEmployees.value = team.employees.map(employee => employee._id);
+const defineEdit = (team: Team) => {
+  isEditing.value = true;
+  updatedTeam.value = team;
+  checkedEmployees.value = updatedTeam.value.employees.map(
+    employee => employee._id
+  );
   toggleDialog();
 };
 const toggleDialog = async () => {
-  if (dialog.value?.open) {
-    resetTeam();
-    dialog.value?.close();
+  if (createTeamDialog.value?.open) {
+    updatedTeam.value = null;
+    checkedEmployees.value = [];
+    createTeamDialog.value?.close();
+    isEditing.value = false;
   } else {
     emit("isLoading:true");
     employees.value = await fetchEmployees();
     emit("isLoading:false");
-    dialog.value?.showModal();
+    createTeamDialog.value?.showModal();
   }
 };
 const fetchEmployees = async () => {
-  isLoading.value = true;
-  try {
-    const res = await axios.get(import.meta.env.VITE_API_EMPLOYEE, {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    });
-    isLoading.value = false;
-
-    return res.data;
-  } catch (error) {
-    isLoading.value = false;
-
-    console.log(error);
-    return [];
-  }
+  return axios
+    .get(import.meta.env.VITE_API_EMPLOYEE)
+    .then(res => res.data)
+    .catch(_ => []);
 };
+const handleCreateTeam = async (event: Event) => {
+  const form = event.target as HTMLFormElement;
+  const formData = new FormData(form);
+  const formJson = Object.fromEntries(formData.entries());
 
-const resetTeam = () => {
-  Object.assign(proxyTeam, rawTeam);
-};
-
-const handleCreateTeam = async () => {
-  proxyTeam.employees = checkedEmployees.value;
-
-  isLoading.value = true;
+  const team = {
+    ...formJson,
+    employees: checkedEmployees.value,
+  };
 
   try {
-    const res = await axios.post(import.meta.env.VITE_API_TEAM, proxyTeam, {
+    const response = await axios.post(import.meta.env.VITE_API_TEAM, team, {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
     });
     toggleDialog();
-    resetTeam();
-    handleResponseMessage(res.data, true);
+    createTeamForm.value?.reset();
+    checkedEmployees.value = [];
+    handleResponseMessage(response.data, true);
     emit("team:created");
   } catch (error) {
     toggleDialog();
+    createTeamForm.value?.reset();
+    checkedEmployees.value = [];
     handleResponseMessage(String((error as AxiosError).response?.data), false);
   }
-  isLoading.value = false;
 };
 
-const handleUpdateTeam = async () => {
-  proxyTeam.employees = checkedEmployees.value;
+const handleUpdateTeam = async (event: Event) => {
+  const form = event.target as HTMLFormElement;
+  const formData = new FormData(form);
+  const formJson = Object.fromEntries(formData.entries());
 
-  isLoading.value = true;
+  const team = {
+    ...formJson,
+    employees: checkedEmployees.value,
+  };
 
   try {
-    const res = await axios.put(
-      import.meta.env.VITE_API_TEAM + proxyTeam._id,
-      proxyTeam,
+    const response = await axios.put(
+      import.meta.env.VITE_API_TEAM + updatedTeam.value?._id,
+      team,
       {
         headers: {
           Authorization: "Bearer " + localStorage.getItem("token"),
@@ -120,47 +100,45 @@ const handleUpdateTeam = async () => {
       }
     );
     toggleDialog();
-    resetTeam();
-    handleResponseMessage(res.data, true);
-    emit("team:created");
+    createTeamForm.value?.reset();
+    checkedEmployees.value = [];
+    handleResponseMessage(response.data, true);
+    emit("team:updated");
   } catch (error) {
     toggleDialog();
+    createTeamForm.value?.reset();
+    checkedEmployees.value = [];
     handleResponseMessage(String((error as AxiosError).response?.data), false);
   }
-  isLoading.value = false;
 };
 
 //computations
 
-const searchedEmployees = computed(() =>
-  [...employees.value].filter(employee =>
-    employee.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
-  )
-);
-
-const handleSubmit = () => {
-  if (isUpdating.value) {
-    return handleUpdateTeam();
+const searchedEmployees = computed(() => {
+  if (searchInput.value !== "") {
+    return employees.value.filter(employee =>
+      employee.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
+    );
   }
-  return handleCreateTeam();
-};
-
-onMounted(() => {
-  dialog.value?.addEventListener("cancel", () => {
-    isUpdating.value = false;
-    resetTeam();
-  });
+  return employees.value;
 });
+
+const handleTeam = (event: Event) => {
+  if (isEditing.value) {
+    return handleUpdateTeam(event);
+  }
+  return handleCreateTeam(event);
+};
 
 //exposes
 
 defineExpose({
   toggleCreateTeamDialog: toggleDialog,
-  updateTeam: prepareUpdate,
+  updateTeam: defineEdit,
 });
 </script>
 <template>
-  <dialog class="modal modal-bottom sm:modal-middle" ref="dialog">
+  <dialog class="modal modal-bottom sm:modal-middle" ref="createTeamDialog">
     <div class="modal-box min-h-0">
       <button
         class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
@@ -169,20 +147,13 @@ defineExpose({
         <i class="fa-solid fa-x"></i>
       </button>
       <div>
-        <h3 class="font-bold text-lg">Create a new team</h3>
-        <AvatarGroup
-          :employees="[
-            ...employees.filter(employee =>
-              checkedEmployees.includes(employee._id)
-            ),
-          ]"
-        />
+        <h3 class="font-bold text-lg">Edit {{}}</h3>
       </div>
       <form
         ref="createTeamForm"
         method="post"
-        class="form-control"
-        @submit.prevent="handleSubmit"
+        class="form-control gap-3"
+        @submit.prevent="handleTeam"
       >
         <label for="name" class="label label-text">Team name</label>
         <input
@@ -193,7 +164,7 @@ defineExpose({
           class="input input-bordered input-primary w-full"
           maxlength="30"
           required
-          v-model="proxyTeam.name"
+          :value="updatedTeam?.name"
         />
 
         <label for="description" class="label label-text">
@@ -206,7 +177,7 @@ defineExpose({
           placeholder="ex: finance department of building nº 3"
           maxlength="40"
           required
-          v-model="proxyTeam.description"
+          :value="String(updatedTeam?.description ?? '')"
         ></textarea>
         <label for="search-employees" class="label label-text"
           >Total Employees: {{ employees.length }}</label
@@ -239,7 +210,7 @@ defineExpose({
               <tr>
                 <th></th>
                 <th>Name</th>
-                <th>Roles</th>
+                <th>Job</th>
               </tr>
             </thead>
             <tbody>
@@ -272,12 +243,12 @@ defineExpose({
                       </div>
                     </div>
                   </td>
-                  <td class="flex flex-col gap-1">
-                    <template v-for="role in employee.roles">
-                      <span class="badge badge-ghost badge-sm">
+                  <td>
+                    <span class="badge badge-ghost badge-sm">
+                      <template v-for="role in employee.roles">
                         {{ role }}
-                      </span>
-                    </template>
+                      </template>
+                    </span>
                   </td>
                 </tr></template
               >
@@ -289,33 +260,15 @@ defineExpose({
           <button class="btn" type="button" @click="toggleDialog">
             cancel
           </button>
-          <button
-            class="btn btn-primary"
-            type="submit"
-            v-if="!isUpdating"
-            :disabled="isLoading"
-          >
+          <button class="btn btn-primary" type="submit" v-if="!isEditing">
             Create
-            <span
-              class="loading loading-spinner loading-xs"
-              v-if="isLoading"
-            ></span>
           </button>
-          <button
-            class="btn btn-primary"
-            type="submit"
-            v-if="isUpdating"
-            :disabled="isLoading"
-          >
+          <button class="btn btn-primary" type="submit" v-if="isEditing">
             Update
-
-            <span
-              class="loading loading-spinner loading-xs"
-              v-if="isLoading"
-            ></span>
           </button>
         </div>
       </form>
     </div>
   </dialog>
 </template>
+<style></style>

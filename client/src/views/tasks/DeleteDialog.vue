@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Task } from "../../types";
+import { Task } from "../../types.js";
 import axios from "axios";
-import handleApiResponseMessage from "../../utils/handleApiResponseMessage";
+import handleResponseMessage from "../../utils/handleResponseMessage.js";
 
 //emits
 const emit = defineEmits(["task:delete"]);
 
 const taskRef = ref<Task>();
 const deleteDialog = ref<HTMLDialogElement>();
+
+const isLoading = ref(false);
 
 const toggleDialog = () => {
   if (deleteDialog.value?.open) {
@@ -23,18 +25,25 @@ const defineTask = (task: Task) => {
   toggleDialog();
 };
 
-const handleDeleteFile = async () => {
+const handleDelete = async () => {
+  isLoading.value = true;
   try {
     const res = await axios.delete(
-      import.meta.env.VITE_API_TASKS + taskRef.value?._id
+      import.meta.env.VITE_API_TASKS + taskRef.value?._id,
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
     );
     emit("task:delete");
     toggleDialog();
-    handleApiResponseMessage(res.data, true);
+    handleResponseMessage(res.data, true);
   } catch (error) {
     toggleDialog();
-    handleApiResponseMessage((error as Error).message, false);
+    handleResponseMessage((error as Error).message, false);
   }
+  isLoading.value = false;
 };
 
 //exposes
@@ -45,7 +54,7 @@ defineExpose({
 </script>
 <template>
   <dialog class="modal modal-middle lg:modal-middle" ref="deleteDialog">
-    <div class="modal-box flex flex-col gap-3 prose">
+    <div class="modal-box flex flex-col gap-3">
       <form method="dialog">
         <i class="fa-solid fa-check-to-slot"></i>
         <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
@@ -53,9 +62,9 @@ defineExpose({
         </button>
       </form>
       <form
-        class="flex flex-col prose gap-3"
+        class="flex flex-col gap-3"
         method="post"
-        @submit.prevent="handleDeleteFile"
+        @submit.prevent="handleDelete"
       >
         <h3 class="font-bold text-lg">
           Are you sure ? deleting task:
@@ -69,9 +78,14 @@ defineExpose({
           :value="taskRef?.title"
           readonly
         />
-        <button class="btn btn-error" type="submit">delete</button>
+        <button class="btn btn-error" type="submit" :disabled="isLoading">
+          delete
+          <span
+            class="loading loading-spinner loading-xs"
+            v-if="isLoading"
+          ></span>
+        </button>
       </form>
     </div>
   </dialog>
 </template>
-<style></style>

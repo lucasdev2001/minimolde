@@ -1,6 +1,6 @@
 import { apiResponse } from "../stores/apiResponse";
 
-export default function handleApiResponseMessage(
+export default function handleResponseMessage(
   message: string,
   success: boolean
 ) {

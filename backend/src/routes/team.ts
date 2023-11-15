@@ -3,10 +3,52 @@ import Team from "../models/Team";
 import Employee from "../models/Employee";
 import { HTTPException } from "hono/http-exception";
 import { faker } from "@faker-js/faker";
+import { jwt } from "hono/jwt";
 const team = new Hono();
+team.use("/*", jwt({ secret: process.env.JWT_SECRET! }));
+
+team.get("/employee/:employee", async c => {
+  const employee = await c.req.param("employee");
+
+  const exists = await Employee.exists({
+    _id: employee,
+  });
+
+  if (!exists) throw new HTTPException(404, { message: "Employee not found" });
+
+  const team = await Team.find({ employees: employee }).populate({
+    path: "employees",
+    select: ["name", "email", "roles"],
+  });
+  return c.json(team, 200);
+});
+
+team.get("/:name", async c => {
+  const name = await c.req.param("name");
+
+  const team = await Team.findOne({ name: name }).populate({
+    path: "employees",
+    select: ["name", "email", "roles", "profilePicture"],
+  });
+
+  return c.json(team);
+});
+
+team.get("/", async c => {
+  const teams = await Team.find({}).populate({
+    path: "employees",
+    select: ["name", "email", "roles", "profilePicture"],
+  });
+
+  return c.json(teams, 200);
+});
 
 team.post("/", async c => {
   const body = await c.req.json();
+  const exists = await Team.exists({ name: body.name });
+  if (exists)
+    throw new HTTPException(409, { message: "Team name already exists" });
+
   const team = new Team(body);
   await team.save();
   return c.json("Created succesfully.", 201);
@@ -34,42 +76,6 @@ team.put("/:id", async c => {
   const body = await c.req.json();
   await Team.findByIdAndUpdate(id, body);
   return c.json("Updated succesfully.", 201);
-});
-
-team.get("/employee/:employee", async c => {
-  const employee = await c.req.param("employee");
-
-  const exists = await Employee.exists({
-    _id: employee,
-  });
-
-  if (!exists) throw new HTTPException(404, { message: "Employee not found" });
-
-  const team = await Team.find({ employees: employee }).populate({
-    path: "employees",
-    select: ["name", "email", "roles"],
-  });
-  return c.json(team);
-});
-
-team.get("/:id", async c => {
-  const id = await c.req.param("id");
-
-  const team = await Team.findById(id).populate({
-    path: "employees",
-    select: ["name", "email", "roles", "profilePicture"],
-  });
-
-  return c.json(team);
-});
-
-team.get("/", async c => {
-  const teams = await Team.find({}).populate({
-    path: "employees",
-    select: ["name", "email", "roles", "profilePicture"],
-  });
-
-  return c.json(teams);
 });
 
 team.delete("/:id", async c => {

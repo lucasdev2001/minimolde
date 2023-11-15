@@ -3,8 +3,10 @@ import { HTTPException } from "hono/http-exception";
 
 export default (err: Error, c: Context<Env, any, {}>) => {
   if (err instanceof HTTPException) {
+    console.log(err);
+
     return err.getResponse();
   }
-  console.log(err.message);
+  console.log(err);
   return c.json(err.message, 500);
 };

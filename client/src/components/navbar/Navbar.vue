@@ -4,18 +4,20 @@ import { useRoute, useRouter } from "vue-router";
 import BottomNavbar from "./BottomNavbar.vue";
 
 import { employee } from "../../stores/employeeStore";
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { Team, Token } from "../../types";
 import * as mqtt from "mqtt";
+import Profile from "./Profile.vue";
 
 const route = useRoute();
 const notificationsCount = ref(0);
 const router = useRouter();
 const teams = ref<Team[]>([]);
 
-const client = mqtt.connect(import.meta.env.VITE_API_BROKER);
+const client = mqtt.connect(import.meta.env.VITE_API_BROKER, {});
+
 client.subscribe("notifications", _ => console.log(_));
 client.on("message", async _ => {
   notificationsCount.value++;
@@ -25,13 +27,24 @@ onMounted(async () => {
   const token = localStorage.getItem("token");
   if (token) {
     const decoded = jwtDecode(token) as Token;
-    axios.get("http://localhost:3000/employees/" + decoded._id).then(res => {
-      employee.value = res.data;
-    });
+    const fetchEmployee = await axios.get(
+      import.meta.env.VITE_API_EMPLOYEE + decoded._id,
+      {
+        headers: {
+          Authorization: "Bearer " + token,
+        },
+      }
+    );
+    employee.value = fetchEmployee.data;
   }
 
   const res = await axios.get(
-    import.meta.env.VITE_API_EMPLOYEE_TEAMS + employee.value._id
+    import.meta.env.VITE_API_EMPLOYEE_TEAMS + employee.value._id,
+    {
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+    }
   );
   teams.value = res.data;
 });
@@ -39,15 +52,6 @@ const logout = () => {
   localStorage.removeItem("token");
   router.push({ name: "Auth" });
 };
-
-const routeBreadCrumb = computed(() => {
-  const split = route.path.split("/");
-
-  console.log(router.currentRoute.value);
-
-  return route.path.split("/");
-});
-console.log(routeBreadCrumb.value);
 </script>
 <template>
   <div class="drawer sm:drawer-open">
@@ -57,13 +61,13 @@ console.log(routeBreadCrumb.value);
         <div class="grow">
           <div class="text-sm breadcrumbs">
             <ul>
-              <!-- <template v-for="routePath in route.path.split('/')">
+              <template v-for="routePath in route.path.split('/')">
                 <li>
                   <label for="dashboard-drawer">
-                    <a>{{ routePath }}</a>
+                    <a>{{ decodeURIComponent(routePath) }}</a>
                   </label>
                 </li>
-              </template> -->
+              </template>
             </ul>
           </div>
         </div>
@@ -102,15 +106,11 @@ console.log(routeBreadCrumb.value);
       ></label>
       <ul class="menu p-4 w-80 min-h-full z-50 bg-base-100 justify-between">
         <div class="flex flex-col gap-3">
-          <div class="avatar place-items-center gap-3">
-            <div class="w-14 rounded-full">
-              <img :src="employee.profilePicture" />
-            </div>
-            <hgroup>
-              <h3>{{ employee.name }}</h3>
-              <p>{{ employee.email }}</p>
-            </hgroup>
-          </div>
+          <Profile>
+            <template #profile-actions>
+              <li><a @click="logout">Logout</a></li>
+            </template>
+          </Profile>
           <li>
             <a class="bg-base-200" @click="router.push({ name: 'home' })">
               Home
@@ -129,7 +129,9 @@ console.log(routeBreadCrumb.value);
               <i class="fa-solid fa-inbox ms-auto"></i>
             </a>
           </li>
-          <ul class="menu menu-xs bg-base-200 rounded-lg max-w-xs w-full">
+          <ul
+            class="menu menu-xs bg-base-200 rounded-lg max-w-xs w-full max-h-96 sm:overflow-clip overflow-auto hover:overflow-auto"
+          >
             <li>
               <details open>
                 <summary class="p-2">
@@ -143,9 +145,9 @@ console.log(routeBreadCrumb.value);
                         class="p-2"
                         @click="
                           router.push({
-                            name: `teams`,
+                            name: 'teams',
                             params: {
-                              team: team._id,
+                              team: team.name,
                             },
                           })
                         "
@@ -159,7 +161,10 @@ console.log(routeBreadCrumb.value);
             </li>
           </ul>
 
-          <ul class="menu menu-xs bg-base-200 rounded-lg max-w-xs w-full">
+          <ul
+            class="menu menu-xs bg-base-200 rounded-lg max-w-xs w-full"
+            v-if="employee.roles.includes('manager')"
+          >
             <li>
               <details open>
                 <summary class="p-2">

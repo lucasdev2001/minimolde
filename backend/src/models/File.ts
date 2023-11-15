@@ -21,6 +21,11 @@ const fileSchema = new Schema(
   }
 );
 
+fileSchema.pre("find", function (next) {
+  console.log("hi");
+  next();
+});
+
 const File = model("File", fileSchema);
 
 export default File;
