@@ -9,6 +9,7 @@ import axios from "axios";
 import handleApiResponseMessage from "../../utils/handleResponseMessage";
 import AvatarGroup from "../employees/AvatarGroup.vue";
 import { useRoute } from "vue-router";
+import { client } from "../../microservices/broker";
 //refs
 const taskDialog = ref<InstanceType<typeof TaskDialog>>();
 const deleteDialog = ref<InstanceType<typeof DeleteDialog>>();
@@ -130,6 +131,12 @@ watch(route, async () => {
     await fetchTeam();
     tasks.value = await fetchTasks();
     isLoading.value = false;
+  }
+});
+
+client.on("message", async topic => {
+  if (topic === "tasks") {
+    tasks.value = await fetchTasks();
   }
 });
 </script>

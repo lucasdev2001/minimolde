@@ -5,8 +5,8 @@ import path from "node:path";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-const port = 1883;
-const wsPort = 8888;
+const port = Number(process.env.BROKER_PORT);
+const wsPort = Number(process.env.BROKER_WSPORT);
 
 const aedes = new Aedes();
 const server = createServer(aedes);

@@ -1,0 +1,10 @@
+services:
+  client:
+    image: "lucasdev2001/minimolde-client"
+    ports:
+      - "80:4173"
+
+  backend:
+    image: "lucasdev2001/minimolde-backend"
+    ports:
+      - "3000:3000"
