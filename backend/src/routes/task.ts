@@ -4,12 +4,37 @@ import { faker } from "@faker-js/faker";
 import Employee from "../models/Employee";
 import Team from "../models/Team";
 import { jwt } from "hono/jwt";
+import { HTTPException } from "hono/http-exception";
 const task = new Hono();
 task.use("/*", jwt({ secret: process.env.JWT_SECRET! }));
+task.use("/:id", async (c, next) => {
+  const payload = c.get("jwtPayload");
+  const method = c.req.method;
+  const taskId = c.req.param("id");
+  const employeeId = payload._id;
+
+  if (method === "DELETE" || method === "PUT") {
+    const isEmployeeManager = await Employee.exists({
+      _id: employeeId,
+      roles: "manager",
+    });
+
+    const isTaskSelAssignedToEmployee = await Task.exists({
+      assignedTo: employeeId,
+      _id: taskId,
+    });
+
+    const isAllowed = isEmployeeManager || isTaskSelAssignedToEmployee;
+    if (isAllowed === null)
+      throw new HTTPException(404, { message: "you are not allowed" });
+    await next();
+  } else {
+    await next();
+  }
+});
 
 task.post("/", async c => {
   const body = await c.req.json();
-  console.log(body);
 
   await Task.create(body);
   return c.json("Created succesfully.", 201);

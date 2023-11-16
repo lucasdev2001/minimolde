@@ -30,7 +30,7 @@ const employeeSchema = new Schema(
       default: !Number(process.env.PRODUCTION),
     },
   },
-  { strict: true }
+  { id: false, strict: true }
 );
 
 employeeSchema.pre("save", async function (next) {

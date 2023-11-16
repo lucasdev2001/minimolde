@@ -5,6 +5,9 @@ import { onMounted, reactive, ref } from "vue";
 import { employee } from "../../stores/employeeStore";
 import handleResponseMessage from "../../utils/handleResponseMessage";
 import { useObjectUrl } from "@vueuse/core";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const { open, onChange } = useFileDialog({
   accept: "image/*",
@@ -105,9 +108,11 @@ const handleProfileUpdate = async () => {
       }
     );
     handleResponseMessage(res.data, true);
-    employee.value = await fetchProfile();
-    if (proxyProfile.email !== null) {
+    if (proxyProfile.email !== employee.value.email) {
       localStorage.clear();
+      router.push({ name: "Auth" });
+    } else {
+      employee.value = await fetchProfile();
     }
   } catch (error) {
     handleResponseMessage((error as Error).message, false);

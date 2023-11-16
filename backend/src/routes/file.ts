@@ -40,7 +40,7 @@ file.post("/", async c => {
     newFile.save();
   } catch (error) {
     newFile.status = "failed";
-    newFile.save();
+    await newFile.save();
   }
 
   return c.json("Created succesfully.", 201);

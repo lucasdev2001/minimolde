@@ -8,6 +8,8 @@ import TaskVue from "../tasks/Task.vue";
 import axios from "axios";
 import { employee } from "../../stores/employeeStore";
 import handleApiResponseMessage from "../../utils/handleResponseMessage";
+import { client } from "../../microservices/broker";
+
 //refs
 const taskDialog = ref<InstanceType<typeof TaskDialog>>();
 const deleteDialog = ref<InstanceType<typeof DeleteDialog>>();
@@ -94,6 +96,12 @@ const inProgressTasks = computed(_ => {
 onMounted(async () => {
   tasks.value = await fetchTasks();
 });
+
+client.on("message", async topic => {
+  if (topic === "tasks") {
+    tasks.value = await fetchTasks();
+  }
+});
 </script>
 
 <template>
@@ -172,7 +180,7 @@ onMounted(async () => {
         <template v-for="task in startedTasks">
           <TaskVue
             :task="task"
-            @task:edit="taskDialog?.updateTask(task)"
+            @task:update="taskDialog?.updateTask(task)"
             @task:delete="deleteDialog?.deleteTask(task)"
             @task:status="e => handleTaskStatus(e,task._id!)"
           />
@@ -186,7 +194,7 @@ onMounted(async () => {
         <template v-for="task in inProgressTasks">
           <TaskVue
             :task="task"
-            @task:edit="taskDialog?.updateTask(task)"
+            @task:update="taskDialog?.updateTask(task)"
             @task:delete="deleteDialog?.deleteTask(task)"
             @task:status="e => handleTaskStatus(e,task._id!)"
           />
@@ -200,7 +208,7 @@ onMounted(async () => {
         <template v-for="task in completedTasks">
           <TaskVue
             :task="task"
-            @task:edit="taskDialog?.updateTask(task)"
+            @task:update="taskDialog?.updateTask(task)"
             @task:delete="deleteDialog?.deleteTask(task)"
             @task:status="e => handleTaskStatus(e,task._id!)"
           />
@@ -217,7 +225,7 @@ onMounted(async () => {
           <template v-for="task in startedTasks">
             <TaskVue
               :task="task"
-              @task:edit="taskDialog?.updateTask(task)"
+              @task:update="taskDialog?.updateTask(task)"
               @task:delete="deleteDialog?.deleteTask(task)"
               @task:status="e => handleTaskStatus(e,task._id!)"
             />
@@ -232,7 +240,7 @@ onMounted(async () => {
           <template v-for="task in inProgressTasks">
             <TaskVue
               :task="task"
-              @task:edit="taskDialog?.updateTask(task)"
+              @task:update="taskDialog?.updateTask(task)"
               @task:delete="deleteDialog?.deleteTask(task)"
               @task:status="e => handleTaskStatus(e,task._id!)"
             />
@@ -248,7 +256,7 @@ onMounted(async () => {
           <template v-for="task in completedTasks">
             <TaskVue
               :task="task"
-              @task:edit="taskDialog?.updateTask(task)"
+              @task:update="taskDialog?.updateTask(task)"
               @task:delete="deleteDialog?.deleteTask(task)"
               @task:status="e => handleTaskStatus(e,task._id!)"
             />

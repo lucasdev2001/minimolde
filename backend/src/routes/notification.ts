@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import Notification from "../models/Notification";
+import { jwt } from "hono/jwt";
 const notification = new Hono();
 
 notification.post("/", async c => {

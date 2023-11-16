@@ -213,7 +213,7 @@ watch(route, async () => {
         <template v-for="task in startedTasks">
           <TaskVue
             :task="task"
-            @task:edit="taskDialog?.updateTask(task)"
+            @task:update="taskDialog?.updateTask(task)"
             @task:delete="deleteDialog?.deleteTask(task)"
             @task:status="e => handleTaskStatus(e,task._id!)"
           />
@@ -227,7 +227,7 @@ watch(route, async () => {
         <template v-for="task in inProgressTasks">
           <TaskVue
             :task="task"
-            @task:edit="taskDialog?.updateTask(task)"
+            @task:update="taskDialog?.updateTask(task)"
             @task:delete="deleteDialog?.deleteTask(task)"
             @task:status="e => handleTaskStatus(e,task._id!)"
           />
@@ -241,7 +241,7 @@ watch(route, async () => {
         <template v-for="task in completedTasks">
           <TaskVue
             :task="task"
-            @task:edit="taskDialog?.updateTask(task)"
+            @task:update="taskDialog?.updateTask(task)"
             @task:delete="deleteDialog?.deleteTask(task)"
             @task:status="e => handleTaskStatus(e,task._id!)"
           />
@@ -258,7 +258,7 @@ watch(route, async () => {
           <template v-for="task in startedTasks">
             <TaskVue
               :task="task"
-              @task:edit="taskDialog?.updateTask(task)"
+              @task:update="taskDialog?.updateTask(task)"
               @task:delete="deleteDialog?.deleteTask(task)"
               @task:status="e => handleTaskStatus(e,task._id!)"
             />
@@ -273,7 +273,7 @@ watch(route, async () => {
           <template v-for="task in inProgressTasks">
             <TaskVue
               :task="task"
-              @task:edit="taskDialog?.updateTask(task)"
+              @task:update="taskDialog?.updateTask(task)"
               @task:delete="deleteDialog?.deleteTask(task)"
               @task:status="e => handleTaskStatus(e,task._id!)"
             />
@@ -289,7 +289,7 @@ watch(route, async () => {
           <template v-for="task in completedTasks">
             <TaskVue
               :task="task"
-              @task:edit="taskDialog?.updateTask(task)"
+              @task:update="taskDialog?.updateTask(task)"
               @task:delete="deleteDialog?.deleteTask(task)"
               @task:status="e => handleTaskStatus(e,task._id!)"
             />

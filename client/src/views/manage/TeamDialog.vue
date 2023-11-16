@@ -21,21 +21,22 @@ const isLoading = ref(false);
 
 interface ClientTeam extends Omit<Team, "employees"> {
   employees: Employee[] | string[];
+  checkedEmployees: string[];
 }
 
-const rawTeam: Team = {
+const rawTeam: ClientTeam = {
   //keeping a raw state so we can reset proxy later
   name: "",
   description: "",
   employees: [],
+  checkedEmployees: [],
 };
-
-const checkedEmployees = ref<string[]>([]);
 
 const proxyTeam = reactive<ClientTeam>({
   name: "",
   description: "",
   employees: [],
+  checkedEmployees: [],
 });
 
 const searchInput = ref("");
@@ -45,7 +46,7 @@ const isUpdating = ref(false);
 const prepareUpdate = (team: Team) => {
   isUpdating.value = true;
   Object.assign(proxyTeam, team);
-  checkedEmployees.value = team.employees.map(employee => employee._id);
+  proxyTeam.checkedEmployees = team.employees.map(employee => employee._id);
   toggleDialog();
 };
 const toggleDialog = async () => {
@@ -83,8 +84,6 @@ const resetTeam = () => {
 };
 
 const handleCreateTeam = async () => {
-  proxyTeam.employees = checkedEmployees.value;
-
   isLoading.value = true;
 
   try {
@@ -105,8 +104,6 @@ const handleCreateTeam = async () => {
 };
 
 const handleUpdateTeam = async () => {
-  proxyTeam.employees = checkedEmployees.value;
-
   isLoading.value = true;
 
   try {
@@ -173,7 +170,7 @@ defineExpose({
         <AvatarGroup
           :employees="[
             ...employees.filter(employee =>
-              checkedEmployees.includes(employee._id)
+              proxyTeam.checkedEmployees.includes(employee._id)
             ),
           ]"
         />
@@ -252,7 +249,7 @@ defineExpose({
                         class="checkbox"
                         name="employees"
                         :value="employee._id"
-                        v-model="checkedEmployees"
+                        v-model="proxyTeam.checkedEmployees"
                       />
                     </label>
                   </th>

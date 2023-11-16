@@ -17,7 +17,7 @@ export interface Team {
 export type TaskStatus = "started" | "inProgress" | "completed";
 
 export interface Task {
-  _id?: string;
+  _id?: string | null;
   title: string;
   description: string;
   assignedTo: string[];

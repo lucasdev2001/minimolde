@@ -8,20 +8,40 @@ import { onMounted, ref } from "vue";
 import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { Team, Token } from "../../types";
-import * as mqtt from "mqtt";
 import Profile from "./Profile.vue";
+import { client } from "../../microservices/broker";
 
 const route = useRoute();
 const notificationsCount = ref(0);
 const router = useRouter();
 const teams = ref<Team[]>([]);
 
-const client = mqtt.connect(import.meta.env.VITE_API_BROKER, {});
+client.on("message", async topic => {
+  if (topic === "notifications") {
+    notificationsCount.value++;
+  }
 
-client.subscribe("notifications", _ => console.log(_));
-client.on("message", async _ => {
-  notificationsCount.value++;
+  if (topic === "teams") {
+    teams.value = await fetchTeams();
+  }
 });
+
+const fetchTeams = async () => {
+  try {
+    const res = await axios.get(
+      import.meta.env.VITE_API_EMPLOYEE_TEAMS + employee.value._id,
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
 
 onMounted(async () => {
   const token = localStorage.getItem("token");
@@ -38,15 +58,7 @@ onMounted(async () => {
     employee.value = fetchEmployee.data;
   }
 
-  const res = await axios.get(
-    import.meta.env.VITE_API_EMPLOYEE_TEAMS + employee.value._id,
-    {
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    }
-  );
-  teams.value = res.data;
+  teams.value = await fetchTeams();
 });
 const logout = () => {
   localStorage.removeItem("token");

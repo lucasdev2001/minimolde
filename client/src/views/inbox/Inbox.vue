@@ -3,15 +3,8 @@ import { onMounted, ref } from "vue";
 import { employee } from "../../stores/employeeStore";
 import { Notification } from "../../types";
 import axios from "axios";
-import * as mqtt from "mqtt";
-import { onBeforeRouteLeave } from "vue-router";
 import handleResponseMessage from "../../utils/handleResponseMessage";
-
-const client = mqtt.connect(import.meta.env.VITE_API_BROKER);
-client.subscribe("notifications", _ => console.log(_));
-client.on("message", async _ => {
-  notifications.value = await fetchNotifications();
-});
+import { client } from "../../microservices/broker";
 
 const isLoading = ref(false);
 
@@ -72,8 +65,10 @@ const toggleDialog = async () => {
 onMounted(async () => {
   notifications.value = await fetchNotifications();
 });
-onBeforeRouteLeave(() => {
-  client.end();
+client.on("message", async topic => {
+  if (topic === "notifications") {
+    notifications.value = await fetchNotifications();
+  }
 });
 const notificationMessage = ref("");
 </script>

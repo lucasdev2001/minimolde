@@ -1,15 +1,23 @@
 <script setup lang="ts">
+import { reactive } from "vue";
+
 const emit = defineEmits(["submit"]);
 defineProps({
   isLoading: Boolean,
 });
 
-const handleSubmit = (event: Event) => {
-  emit("submit", event);
+const proxyEmployee = reactive({
+  name: "",
+  email: "",
+  password: "",
+});
+
+const handleSubmit = () => {
+  emit("submit", proxyEmployee);
 };
 </script>
 <template>
-  <form class="flex flex-col gap-3" @submit="handleSubmit">
+  <form class="flex flex-col gap-3" @submit.prevent="handleSubmit">
     <hgroup class="text-center">
       <h1 class="text-3xl">Hello there, Welcome!</h1>
       <p>Please enter your details</p>
@@ -21,6 +29,7 @@ const handleSubmit = (event: Event) => {
         type="text"
         class="input input-bordered input-primary w-full"
         required
+        v-model="proxyEmployee.name"
       />
     </label>
     <label for="email" class="label-text"
@@ -29,6 +38,7 @@ const handleSubmit = (event: Event) => {
         name="email"
         type="email"
         class="input input-bordered input-primary w-full"
+        v-model="proxyEmployee.email"
         required
       />
     </label>
@@ -40,6 +50,7 @@ const handleSubmit = (event: Event) => {
         type="password"
         class="input input-bordered input-primary w-full"
         required
+        v-model="proxyEmployee.password"
       />
     </label>
 

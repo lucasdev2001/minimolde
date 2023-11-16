@@ -10,6 +10,23 @@ const employee = new Hono();
 
 employee.use("/*", jwt({ secret: process.env.JWT_SECRET! }));
 
+employee.use("/*", async (c, next) => {
+  const payload = c.get("jwtPayload");
+  const employeeId = payload._id;
+  if (c.req.method !== "GET") {
+    const isEmployeeManager = await Employee.findOne({
+      _id: employeeId,
+      roles: "manager",
+    });
+
+    if (isEmployeeManager === null)
+      throw new HTTPException(401, { message: "You're not allowed" });
+    await next();
+  } else {
+    await next();
+  }
+});
+
 employee.get("/", async c => {
   const { name } = c.req.queries();
 

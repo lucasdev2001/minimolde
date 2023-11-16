@@ -1,7 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
-import * as mqtt from "mqtt";
-
-const client = mqtt.connect(process.env.BROKER!);
+import { client } from "../microservices/broker";
 
 const notificationSchema = new Schema(
   {
@@ -9,6 +7,11 @@ const notificationSchema = new Schema(
     from: {
       type: mongoose.Types.ObjectId,
       ref: "Employee",
+    },
+    expireAt: {
+      type: Date,
+      default: Date.now,
+      index: { expires: "1m" },
     },
   },
   {
@@ -23,7 +26,6 @@ const notificationSchema = new Schema(
 const Notification = model("Notification", notificationSchema);
 
 Notification.watch().on("change", data => {
-  console.log(data);
   client.publish("notifications", "notification:updated");
 });
 

@@ -55,7 +55,7 @@ const handleResetPassword = async () => {
     class="container mx-auto flex flex-col justify-evenly place-items-center h-screen"
   >
     <figure class="flex justify-center">
-      <img src="logo.svg" class="object-cover" />
+      <img src="/logo.svg" class="object-cover" />
     </figure>
     <hgroup class="text-center">
       <h3 class="text-5xl">New password</h3>

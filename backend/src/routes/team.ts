@@ -7,6 +7,23 @@ import { jwt } from "hono/jwt";
 const team = new Hono();
 team.use("/*", jwt({ secret: process.env.JWT_SECRET! }));
 
+team.use("/*", async (c, next) => {
+  const method = c.req.method;
+  if (method !== "GET") {
+    const payload = c.get("jwtPayload");
+    const employeeId = payload._id;
+    const isEmployeeManager = await Employee.exists({
+      _id: employeeId,
+      roles: "manager",
+    });
+    if (isEmployeeManager === null)
+      throw new HTTPException(401, { message: "You're not allowed" });
+    await next();
+  } else {
+    await next();
+  }
+});
+
 team.get("/employee/:employee", async c => {
   const employee = await c.req.param("employee");
 

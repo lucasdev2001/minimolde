@@ -7,7 +7,7 @@ defineProps<{
   task: Task;
 }>();
 
-const emit = defineEmits(["task:edit", "task:delete", "task:status"]);
+const emit = defineEmits(["task:update", "task:delete", "task:status"]);
 </script>
 <template>
   <div class="card bg-base-100 shadow-xl">
@@ -26,7 +26,7 @@ const emit = defineEmits(["task:edit", "task:delete", "task:status"]);
               task.assignedTo.includes(employee._id))
           "
         >
-          <a @click="emit('task:edit')">
+          <a @click="emit('task:update')">
             <i class="fa-solid fa-pen-to-square"></i>
           </a>
         </li>

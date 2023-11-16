@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { Employee, Task, Team } from "../../types";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import handleResponseMessage from "../../utils/handleResponseMessage";
 import AvatarGroup from "../employees/AvatarGroup.vue";
 import { employee } from "../../stores/employeeStore";
@@ -26,6 +26,7 @@ const isLoading = ref(false);
 
 const rawTask: ClientTask = {
   //raw task state so we can reset later
+  _id: null,
   title: "",
   description: "",
   assignedType: "self",
@@ -132,7 +133,7 @@ const handleCreateTask = async () => {
     handleResponseMessage(res.data, true);
   } catch (error) {
     toggleDialog();
-    handleResponseMessage(String(error), true);
+    handleResponseMessage(String((error as AxiosError).response?.data), false);
   }
   isLoading.value = false;
 };
@@ -153,11 +154,13 @@ const handleUpdateTask = async () => {
     emit("task:updated");
     toggleDialog();
     handleResponseMessage(res.data, true);
+    isUpadting.value = false;
   } catch (error) {
     toggleDialog();
-    handleResponseMessage(String(error), true);
+    handleResponseMessage(String((error as AxiosError).response?.data), false);
   }
   isLoading.value = false;
+  isUpadting.value = false;
 };
 
 const searchedEmployees = computed(() =>
@@ -251,7 +254,7 @@ defineExpose({
             />
           </label>
         </div>
-        <div class="form-control">
+        <div class="form-control" v-if="employee.roles.includes('manager')">
           <label class="label cursor-pointer">
             <span class="label-text">Employees</span>
             <input
@@ -263,7 +266,7 @@ defineExpose({
             />
           </label>
         </div>
-        <div class="form-control">
+        <div class="form-control" v-if="employee.roles.includes('manager')">
           <label class="label cursor-pointer">
             <span class="label-text">Team</span>
             <input
