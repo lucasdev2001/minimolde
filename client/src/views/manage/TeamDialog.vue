@@ -85,7 +85,7 @@ const resetTeam = () => {
 
 const handleCreateTeam = async () => {
   isLoading.value = true;
-
+  proxyTeam.employees = proxyTeam.checkedEmployees;
   try {
     const res = await axios.post(import.meta.env.VITE_API_TEAM, proxyTeam, {
       headers: {
@@ -105,6 +105,7 @@ const handleCreateTeam = async () => {
 
 const handleUpdateTeam = async () => {
   isLoading.value = true;
+  proxyTeam.employees = proxyTeam.checkedEmployees;
 
   try {
     const res = await axios.put(
