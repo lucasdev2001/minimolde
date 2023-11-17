@@ -25,7 +25,6 @@ const fetchNotifications = async () => {
   } catch (error) {
     isLoading.value = false;
     console.log(error);
-    return [];
   }
 };
 

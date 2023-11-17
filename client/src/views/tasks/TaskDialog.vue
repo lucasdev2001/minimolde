@@ -88,7 +88,6 @@ const fetchEmployees = async () => {
     return res.data;
   } catch (error) {
     console.log(error);
-    return [];
   }
 };
 const fetchTeams = async () => {
@@ -101,7 +100,6 @@ const fetchTeams = async () => {
     return res.data;
   } catch (error) {
     console.log(error);
-    return [];
   }
 };
 const handleCreateTask = async () => {

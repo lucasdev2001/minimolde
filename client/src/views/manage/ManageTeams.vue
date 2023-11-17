@@ -37,7 +37,6 @@ const fetchTeams = async () => {
     isLoading.value = false;
 
     console.log(error);
-    return [];
   }
 };
 

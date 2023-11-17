@@ -36,7 +36,6 @@ const fetchTeams = async () => {
     return res.data;
   } catch (error) {
     console.log(error);
-    return [];
   }
 };
 

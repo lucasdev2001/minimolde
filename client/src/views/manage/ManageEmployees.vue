@@ -75,7 +75,6 @@ const fetchEmployees = async () => {
   } catch (error) {
     console.log(error);
     isLoading.value = false;
-    return [];
   }
 };
 

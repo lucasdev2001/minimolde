@@ -34,7 +34,6 @@ const fetchFiles = async () => {
   } catch (error) {
     isLoading.value = false;
     console.log(error);
-    return [];
   }
 };
 
