@@ -11,20 +11,17 @@ import { Team, Token } from "../../types";
 import Profile from "./Profile.vue";
 import { client } from "../../microservices/broker";
 
+//refs
 const route = useRoute();
 const notificationsCount = ref(0);
 const router = useRouter();
 const teams = ref<Team[]>([]);
 
-client.on("message", async topic => {
-  if (topic === "notifications") {
-    notificationsCount.value++;
-  }
-
-  if (topic === "teams") {
-    teams.value = await fetchTeams();
-  }
-});
+//functions
+const logout = () => {
+  localStorage.removeItem("token");
+  router.push({ name: "Auth" });
+};
 
 const fetchTeams = async () => {
   try {
@@ -43,6 +40,8 @@ const fetchTeams = async () => {
   }
 };
 
+//lifecycles
+
 onMounted(async () => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -60,10 +59,16 @@ onMounted(async () => {
 
   teams.value = await fetchTeams();
 });
-const logout = () => {
-  localStorage.removeItem("token");
-  router.push({ name: "Auth" });
-};
+
+client.on("message", async topic => {
+  if (topic === "notifications") {
+    notificationsCount.value++;
+  }
+
+  if (topic === "teams") {
+    teams.value = await fetchTeams();
+  }
+});
 </script>
 <template>
   <div class="drawer sm:drawer-open">

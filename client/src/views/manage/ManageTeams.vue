@@ -52,7 +52,6 @@ const searchedTeams = computed(() =>
 onMounted(async () => {
   isLoading.value = true;
   teams.value = await fetchTeams();
-
   isLoading.value = false;
 });
 </script>

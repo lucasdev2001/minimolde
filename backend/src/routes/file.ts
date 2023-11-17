@@ -95,13 +95,6 @@ file.get("/assigned-to/:id", async c => {
   return c.json(files);
 });
 
-file.delete("/:name", async c => {
-  const name = c.req.param("name");
-  await File.findOneAndDelete({ name });
-  await minioClient.removeObject(MINIO_DEFAULT_BUCKET!, name);
-  return c.json("succesfully deleted", 200);
-});
-
 file.get("/download/:name", async c => {
   const name = c.req.param("name");
 
@@ -123,6 +116,13 @@ file.get("/download/:name", async c => {
   const url = await presignedUrlpromise;
 
   return c.redirect(url);
+});
+
+file.delete("/:name", async c => {
+  const name = c.req.param("name");
+  await File.findOneAndDelete({ name });
+  await minioClient.removeObject(MINIO_DEFAULT_BUCKET!, name);
+  return c.json("succesfully deleted", 200);
 });
 
 export default file;

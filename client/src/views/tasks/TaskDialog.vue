@@ -47,21 +47,6 @@ const proxyTask = reactive<ClientTask>({
 });
 
 //computations
-const assignedTo = computed(() => {
-  switch (proxyTask.assignedType) {
-    case "self":
-      return [employee.value._id];
-
-    case "employees":
-      return proxyTask.checkedEmployees;
-
-    case "team":
-      return [proxyTask.checkedTeam];
-
-    default:
-      return [employee.value._id];
-  }
-});
 
 const employees = ref<Employee[]>([]);
 const team = ref<Team[]>([]);
@@ -163,6 +148,31 @@ const handleUpdateTask = async () => {
   isUpadting.value = false;
 };
 
+const handleSubmit = () => {
+  if (isUpadting.value) {
+    return handleUpdateTask();
+  } else {
+    return handleCreateTask();
+  }
+};
+
+//computations
+const assignedTo = computed(() => {
+  switch (proxyTask.assignedType) {
+    case "self":
+      return [employee.value._id];
+
+    case "employees":
+      return proxyTask.checkedEmployees;
+
+    case "team":
+      return [proxyTask.checkedTeam];
+
+    default:
+      return [employee.value._id];
+  }
+});
+
 const searchedEmployees = computed(() =>
   [...employees.value].filter(employee =>
     employee.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
@@ -173,14 +183,6 @@ const searchedTeams = computed(() =>
     team.name.toUpperCase().startsWith(searchInput.value.toUpperCase())
   )
 );
-
-const handleSubmit = () => {
-  if (isUpadting.value) {
-    return handleUpdateTask();
-  } else {
-    return handleCreateTask();
-  }
-};
 
 onMounted(() => {
   dialog.value?.addEventListener("cancel", () => {

@@ -122,7 +122,7 @@ export const router = createRouter({
   ],
 });
 
-router.beforeEach((to) => {
+router.beforeEach(to => {
   if (to.meta.requiresAuth !== false) {
     const token = localStorage.getItem("token");
     if (token) {
@@ -132,8 +132,6 @@ router.beforeEach((to) => {
     }
   }
 });
-
-router.afterEach(() => {});
 
 const isTokenExpired = (token: string) =>
   Date.now() / 1000 >= (jwtDecode(token) as Token).exp;
@@ -147,7 +145,7 @@ const isAuthenticated = async (token: string | null) => {
   };
   return axios
     .get(import.meta.env.VITE_API_ADDRES + "/validate-token", axiosConfig)
-    .then((res) => {
+    .then(res => {
       return res.data;
     })
     .catch(() => false);

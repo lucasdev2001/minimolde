@@ -11,10 +11,6 @@ import notification from "./routes/notification";
 
 const app = new Hono();
 const secret = process.env.JWT_SECRET!;
-/* app.use("/*", async (_, next) => {
-  await new Promise((resolve) => setTimeout(resolve, 1_000));
-  await next();
-}); */
 app.onError(errorHandler);
 
 app.use(
@@ -24,21 +20,19 @@ app.use(
   })
 );
 
+app.get("/", c => c.text("pong 🏓"));
+
 app.use("/validate-token", jwt({ secret }));
 app.get("/validate-token", c => {
   const payload = c.get("jwtPayload");
   return c.json(payload);
 });
 
-app.get("/", c => c.text("pong 🏓"));
-
 app.route("/employees/", employee);
 app.route("/teams/", team);
 app.route("/tasks/", task);
 app.route("/auth/", auth);
 app.route("/notifications/", notification);
-
-// app.use("/files", jwt({ secret }));
 app.route("/files/", file);
 
 export default app;

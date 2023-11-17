@@ -5,17 +5,19 @@ import DeleteFileDialog from "./DeleteDialog.vue";
 import { File as MinimoldeFile } from "../../types";
 import axios from "axios";
 import { employee } from "../../stores/employeeStore";
+
+//refs
 const fileDialog = ref<InstanceType<typeof FileDialog>>();
 const deleteFileDialog = ref<InstanceType<typeof DeleteFileDialog>>();
 const isLoading = ref(false);
 
 const files = ref<MinimoldeFile[]>([]);
 const searchInput = ref("");
-const searchedFiles = computed(() =>
-  [...files.value].filter(file =>
-    file.originalName.toUpperCase().startsWith(searchInput.value.toUpperCase())
-  )
-);
+
+//functions
+const downloadFile = (name: string) => {
+  return import.meta.env.VITE_API_FILES_DOWNLOAD + name;
+};
 
 const fetchFiles = async () => {
   isLoading.value = true;
@@ -36,14 +38,19 @@ const fetchFiles = async () => {
   }
 };
 
+//computations
+const searchedFiles = computed(() =>
+  [...files.value].filter(file =>
+    file.originalName.toUpperCase().startsWith(searchInput.value.toUpperCase())
+  )
+);
+
+//lifecycle
+
 onMounted(async () => {
   const res = await fetchFiles();
   files.value = res;
 });
-
-const downloadFile = (name: string) => {
-  return import.meta.env.VITE_API_FILES_DOWNLOAD + name;
-};
 </script>
 
 <template>

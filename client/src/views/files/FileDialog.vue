@@ -13,7 +13,7 @@ const { open, reset, onChange } = useFileDialog({
 //emits
 const emit = defineEmits(["file:sending", "file:sent"]);
 
-//events
+//refs
 const dialog = ref<HTMLDialogElement | null>(null);
 const isLoading = ref(false);
 const file = ref<File | null>();
@@ -53,6 +53,8 @@ const handleUploadFile = async (e: Event) => {
   dialog.value?.close();
   isLoading.value = false;
 };
+
+//exposures
 
 defineExpose({
   chooseFile: open,

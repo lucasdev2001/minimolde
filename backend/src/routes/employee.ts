@@ -28,11 +28,7 @@ employee.use("/*", async (c, next) => {
 });
 
 employee.get("/", async c => {
-  const { name } = c.req.queries();
-
-  const employees = await Employee.find({
-    name: name ? new RegExp(String(name), "i") : /.*/g,
-  }).select({
+  const employees = await Employee.find().select({
     name: true,
     email: true,
     roles: true,
@@ -41,20 +37,6 @@ employee.get("/", async c => {
   });
 
   return c.json(employees);
-});
-
-employee.post("/populate", async c => {
-  for (let index = 0; index < 20; index++) {
-    const employee = new Employee({
-      name: faker.person.fullName(),
-      password: 123,
-      roles: [faker.person.jobTitle()],
-      email: faker.internet.email(),
-      verified: true,
-    });
-    await employee.save();
-  }
-  return c.json(await Employee.find({}));
 });
 
 employee.get("/:id", async c => {

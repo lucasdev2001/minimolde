@@ -14,6 +14,8 @@ const { open, onChange } = useFileDialog({
   multiple: false,
   reset: true,
 });
+const dialog = ref<HTMLDialogElement>();
+
 const rawProfile = {
   name: "",
   email: "",
@@ -32,6 +34,10 @@ const proxyProfile = reactive<{
   newPassword: null,
 });
 
+const file = ref<File | null | undefined>();
+const url = useObjectUrl(file);
+const changePassword = ref(false);
+
 const isLoading = ref(false);
 const fetchProfile = async () => {
   const res = await axios(
@@ -45,7 +51,6 @@ const fetchProfile = async () => {
   return res.data;
 };
 
-const dialog = ref<HTMLDialogElement>();
 const toggleDialog = () => {
   (proxyProfile.email = employee.value.email),
     (proxyProfile.name = employee.value.name);
@@ -57,10 +62,6 @@ const toggleDialog = () => {
     dialog.value?.showModal();
   }
 };
-
-const file = ref<File | null | undefined>();
-const url = useObjectUrl(file);
-const changePassword = ref(false);
 
 //functions
 onChange(async files => {
