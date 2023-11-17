@@ -26,6 +26,7 @@ interface ClientTeam extends Omit<Team, "employees"> {
 
 const rawTeam: ClientTeam = {
   //keeping a raw state so we can reset proxy later
+  _id: null,
   name: "",
   description: "",
   employees: [],
@@ -143,7 +144,7 @@ const handleSubmit = () => {
 };
 
 onMounted(() => {
-  dialog.value?.addEventListener("cancel", () => {
+  dialog.value?.addEventListener("close", () => {
     isUpdating.value = false;
     resetTeam();
   });

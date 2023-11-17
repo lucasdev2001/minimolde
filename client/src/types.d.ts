@@ -8,7 +8,7 @@ export interface Employee {
 }
 
 export interface Team {
-  _id?: string;
+  _id?: string | null;
   name: string;
   description: string;
   employees: Employee[];

@@ -52,10 +52,13 @@ team.get("/:name", async c => {
 });
 
 team.get("/", async c => {
-  const teams = await Team.find({}).populate({
-    path: "employees",
-    select: ["name", "email", "roles", "profilePicture"],
-  });
+  const teams = await Team.find({})
+    .sort({ created_at: -1 })
+
+    .populate({
+      path: "employees",
+      select: ["name", "email", "roles", "profilePicture"],
+    });
 
   return c.json(teams, 200);
 });
