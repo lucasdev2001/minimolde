@@ -13,6 +13,8 @@ task.use("/:id", async (c, next) => {
   const taskId = c.req.param("id");
   const employeeId = payload._id;
 
+  const task = await Task.findById(taskId);
+
   if (method === "DELETE" || method === "PUT") {
     const isEmployeeManager = await Employee.exists({
       _id: employeeId,
@@ -24,10 +26,20 @@ task.use("/:id", async (c, next) => {
       _id: taskId,
     });
 
-    const isAllowed = isEmployeeManager || isTaskSelAssignedToEmployee;
-    if (isAllowed === null)
-      throw new HTTPException(404, { message: "you are not allowed" });
-    await next();
+    if (task?.assignedType === "team") {
+      const team = await Team.findById(task.assignedTo);
+
+      if (team?.employees.includes(employeeId)) {
+        await next();
+      } else {
+        throw new HTTPException(404, { message: "you are not allowed" });
+      }
+    } else {
+      const isAllowed = isEmployeeManager || isTaskSelAssignedToEmployee;
+      if (isAllowed === null)
+        throw new HTTPException(404, { message: "you are not allowed" });
+      await next();
+    }
   } else {
     await next();
   }
