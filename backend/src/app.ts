@@ -17,7 +17,12 @@ const secret = process.env.JWT_SECRET!;
 }); */
 app.onError(errorHandler);
 
-app.use("/*", cors());
+app.use(
+  "/*",
+  cors({
+    origin: "*",
+  })
+);
 
 app.use("/validate-token", jwt({ secret }));
 app.get("/validate-token", c => {

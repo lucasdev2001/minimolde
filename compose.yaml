@@ -3,16 +3,32 @@ version: "3.8"
 services:
   client:
     image: "lucasdev2001/minimolde-client"
+    networks:
+      - minimolde
     ports:
       - "80:5173"
+    env_file:
+      - client.env
 
   backend:
     image: "lucasdev2001/minimolde-backend"
+    networks:
+      - minimolde
     ports:
       - "3000:3000"
+    env_file:
+      - backend.env
 
   broker:
     image: "lucasdev2001/minimolde-broker"
+    networks:
+      - minimolde
     ports:
       - "1883:1883"
       - "8888:8888"
+    env_file:
+      - broker.env
+
+networks:
+  minimolde:
+    driver: bridge
