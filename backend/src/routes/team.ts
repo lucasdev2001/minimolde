@@ -53,18 +53,17 @@ team.get("/:name", async c => {
 
 team.get("/", async c => {
   const teams = await Team.find({})
-    .sort({ created_at: -1 })
-
-    .populate({
-      path: "employees",
-      select: ["name", "email", "roles", "profilePicture"],
-    });
+  .populate({
+    path: "employees",
+    select: ["name", "email", "roles", "profilePicture"],
+  });
 
   return c.json(teams, 200);
 });
 
 team.post("/", async c => {
   const body = await c.req.json();
+
   const exists = await Team.exists({ name: body.name });
   if (exists)
     throw new HTTPException(409, { message: "Team name already exists" });

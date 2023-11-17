@@ -86,6 +86,8 @@ const resetTeam = () => {
 const handleCreateTeam = async () => {
   isLoading.value = true;
   proxyTeam.employees = proxyTeam.checkedEmployees;
+  console.log(proxyTeam);
+
   try {
     const res = await axios.post(import.meta.env.VITE_API_TEAM, proxyTeam, {
       headers: {
