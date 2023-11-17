@@ -37,6 +37,7 @@ employeeSchema.pre("save", async function (next) {
   if (this.isNew) {
     const hash = await bcrypt.hash(this.password, 10).then(hash => hash);
     this.password = hash;
+    this.profilePicture = `https://picsum.photos/seed/${this.name}/100`;
   }
   return next();
 });

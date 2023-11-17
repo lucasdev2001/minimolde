@@ -166,7 +166,7 @@ auth.put("/reset-password", async c => {
   return c.json("Success", 200);
 });
 
-auth.put("/:id", async c => {
+auth.put("/:id", jwt({ secret }), async c => {
   const id = c.req.param("id");
   const body = await c.req.json();
   const employee = await Employee.findById(id);

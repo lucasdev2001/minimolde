@@ -82,10 +82,12 @@ task.get("/assigned-to/:id", async c => {
   const id = c.req.param("id");
   const tasks = await Task.find({
     assignedTo: id,
-  }).populate({
-    path: "employees",
-    select: ["name", "email", "roles", "profilePicture"],
-  });
+  })
+    .sort({ created_at: -1 })
+    .populate({
+      path: "employees",
+      select: ["name", "email", "roles", "profilePicture"],
+    });
 
   return c.json(tasks);
 });

@@ -39,6 +39,20 @@ employee.get("/", async c => {
   return c.json(employees);
 });
 
+employee.post("/populate", async c => {
+  for (let index = 0; index < 20; index++) {
+    const employee = new Employee({
+      name: faker.person.fullName(),
+      password: 123,
+      roles: [faker.person.jobTitle()],
+      email: faker.internet.email(),
+      verified: true,
+    });
+    await employee.save();
+  }
+  return c.json(await Employee.find({}));
+});
+
 employee.get("/:id", async c => {
   const id = c.req.param("id");
   try {

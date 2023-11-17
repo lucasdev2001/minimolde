@@ -180,7 +180,7 @@ client.on("message", async topic => {
 
           <ul
             class="menu menu-xs bg-base-200 rounded-lg max-w-xs w-full"
-            v-if="employee.roles.includes('manager')"
+            v-if="employee.roles?.includes('manager')"
           >
             <li>
               <details open>
