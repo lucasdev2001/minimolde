@@ -32,7 +32,7 @@ services:
   minio:
     image: "bitnami/minio"
     volumes:
-      - minio:/bitnami/minio/data
+      - ./minio:/bitnami/minio/data
     ports:
       - "9000:9000"
       - "9001:9001"
