@@ -210,7 +210,7 @@ auth.put("/:id", jwt({ secret }), async c => {
 
       const response = await transporter.sendMail({
         from: '"Minimolde bot 👻" minimolde-bot@minimolde.cloud',
-        to: "lucasdev2001@gmail.com",
+        to: body.email,
         subject: "Verify your minimolde account",
         text: "this link will expire in 30 minutes",
         html: `<a href='${validateTokenAdress}'>confirm e-mail</a>`,

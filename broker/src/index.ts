@@ -12,10 +12,6 @@ const aedes = new Aedes();
 const server = createServer(aedes);
 const wssServer = createServer(aedes, { ws: true });
 
-aedes.authenticate = function (client, username, password, callback) {
-  callback(null, String(password) === process.env.BROKER_PASSWORD!);
-};
-
 wssServer.listen(wsPort, () => {
   console.log("web socket listening on port", wsPort);
 });
